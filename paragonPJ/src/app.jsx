@@ -2,8 +2,8 @@
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "dark": false,
-  "ddayDate": "",
-  "ddayMode": "undecided"
+  "ddayDate": "2025-12-31",
+  "ddayMode": "set"
 }/*EDITMODE-END*/;
 
 function App() {

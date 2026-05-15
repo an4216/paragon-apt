@@ -18,7 +18,7 @@ function Hero({ onNav, ddayDate }) {
           <div>
             <div className="hero-eyebrow">
               <span className="dot">!</span>
-              <span>입주예정일 미확정 · 시공사 공지 대기 중</span>
+              <span>입주 최초예정 2025.12.31 · 지연 중 · 시공사 공지 대기</span>
             </div>
             <h1>
               제발<br/>
@@ -83,7 +83,7 @@ function DdayCard({ dday, ddayDate }) {
         <span className="dot"></span>
         <span>LIVE</span>
       </div>
-      <div className="label">입주 예정일까지</div>
+      <div className="label">{dday && dday.diff < 0 ? '최초예정일 경과' : '입주 예정일까지'}</div>
       {dday ? (
         <>
           <div className="big num">
@@ -92,16 +92,16 @@ function DdayCard({ dday, ddayDate }) {
           <div className="sub">{fmt.date(dday.target)} 기준 · 시공사 공식 일정 아님</div>
           <div className="dday-stats">
             <div className="dday-stat">
+              <div className="l">최초 예정</div>
+              <div className="v num">2025.12.31</div>
+            </div>
+            <div className="dday-stat">
               <div className="l">잔금일</div>
               <div className="v num">{dday.diff > 0 ? `${Math.max(0, dday.diff - 7)}일` : '경과'}</div>
             </div>
             <div className="dday-stat">
               <div className="l">사전점검</div>
               <div className="v num">{dday.diff > 0 ? `${Math.max(0, dday.diff - 30)}일` : '경과'}</div>
-            </div>
-            <div className="dday-stat">
-              <div className="l">이사 가능</div>
-              <div className="v num">{dday.diff >= 0 ? `${dday.diff}일` : '가능'}</div>
             </div>
           </div>
         </>
@@ -112,7 +112,7 @@ function DdayCard({ dday, ddayDate }) {
           <div className="dday-stats">
             <div className="dday-stat">
               <div className="l">최초 예정</div>
-              <div className="v num">2024.12</div>
+              <div className="v num">2025.12.31</div>
             </div>
             <div className="dday-stat">
               <div className="l">현재</div>

@@ -20,8 +20,10 @@ function Schedule() {
   ];
 
   const STORAGE_KEY = 'jcp-timeline-v2';
+  // 입주 최초예정일 2025.12.31 (계약상 / 모집공고 2022000222)
+  const INITIAL_MOVE_DATE = '2025-12-31';
   const [moveDate, setMoveDate] = React.useState(() => {
-    try { return localStorage.getItem(STORAGE_KEY + ':date') || ''; } catch { return ''; }
+    try { return localStorage.getItem(STORAGE_KEY + ':date') || INITIAL_MOVE_DATE; } catch { return INITIAL_MOVE_DATE; }
   });
   const [items, setItems] = React.useState(() => {
     try {

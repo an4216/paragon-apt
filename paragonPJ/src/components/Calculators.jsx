@@ -345,7 +345,7 @@ function DelayCalc() {
 
           {/* 단계별 표 */}
           <div className="field">
-            <label>단계별 이율 (xlsx 기준)</label>
+            <label>단계별 이율 (분양계약서 기준)</label>
             <div style={{display:'flex', flexDirection:'column', gap:6, fontSize:12.5}}>
               {RATE_TIERS.map((t, i) => {
                 const active = days <= t.maxDays && (i === 0 || days > RATE_TIERS[i-1].maxDays);
@@ -397,7 +397,7 @@ function DelayCalc() {
           </div>
 
           <div style={{marginTop:14, padding:'10px 12px', background:'var(--warning-soft)', borderRadius:8, fontSize:12, color:'var(--warning)'}}>
-            ⓘ 본 계산은 프로젝트 내 <strong>입주지연보상금계산.xlsx</strong> 파일을 기반으로 합니다. 단계별 이율: 9.05% → 10.05% → 11.05% → <strong>12.05% (최대)</strong>. 실제 보상금은 분양계약서 지체상금 조항을 따릅니다.
+            ⓘ 본 계산은 <strong>분양계약서 지체상금 조항</strong> 기준입니다. 단계별 이율: 9.05% → 10.05% → 11.05% → <strong>12.05% (최대)</strong>. 공식: <code>ROUNDUP(원금 × 이율 / 365 × 일수, 0)</code>. 실제 보상금은 시공사 정산을 따릅니다.
           </div>
         </div>
       </div>
@@ -525,7 +525,7 @@ function InterimCalc() {
           </div>
 
           <div className="field">
-            <label>변동금리 5단계 (xlsx 기준)</label>
+            <label>변동금리 5단계 (62a 기준)</label>
             <div style={{display:'flex', flexDirection:'column', gap:6}}>
               {rateTiers.map((t, i) => (
                 <div key={i} className="row gap-6" style={{alignItems:'center'}}>
@@ -579,7 +579,7 @@ function InterimCalc() {
           </div>
 
           <div style={{marginTop:14, padding:'10px 12px', background:'var(--accent-soft)', borderRadius:8, fontSize:12, color:'var(--accent-text)'}}>
-            ⓘ 본 계산은 프로젝트 내 <strong>중도금 대출 이자 계산기(변동금리-62a기준).xlsx</strong> 파일을 기반으로 합니다. 회차별 적용금리는 시공사 협약은행 변동금리에 따라 달라집니다.
+            ⓘ 본 계산은 <strong>62a 변동금리 기준</strong>으로 회차별 × 단계별 적용 일수를 합산합니다. 실제 회차별 적용금리는 시공사 협약은행 변동금리에 따라 달라집니다.
           </div>
         </div>
       </div>
