@@ -337,6 +337,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .plan-body .name { font-weight: 700; font-size: 15px; margin: 0 0 4px; }
 .plan-body .area { color: var(--text-2); font-size: 13px; }
 .plan-body .specs { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.plan-type-chip { position: absolute; top: 12px; right: 12px; }
 
 /* === Schedule / Checklist === */
 .timeline { position: relative; padding-left: 28px; }
@@ -570,8 +571,27 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .wrap { padding: 0 14px; }
   .nav-logo { font-size: 13px; }
   .nav-logo-mark { width: 30px; height: 30px; font-size: 12px; }
-  .plan-thumb { aspect-ratio: 1/1; }
-  .fp-img { padding: 10px; }
-  /* Schedule 컨트롤바 한 줄 입력 → 모바일에서 칸 폭 정리 */
+
+  /* 평면도 카드 — 모바일에서 가로 리스트 레이아웃 (썸네일 + 정보) */
+  .plan-grid { gap: 8px; }
+  .plan-card {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    align-items: stretch;
+  }
+  .plan-thumb {
+    width: 96px; height: 96px;
+    aspect-ratio: unset;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+  }
+  .fp-img { padding: 4px; }
+  .plan-body { padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .plan-body .name { font-size: 14px; margin: 0; }
+  .plan-body .area { font-size: 11.5px; line-height: 1.35; }
+  .plan-body .specs { margin-top: 4px; gap: 5px; }
+  .plan-body .specs .chip { font-size: 10.5px; padding: 3px 8px; }
+  .plan-type-chip { top: 5px; right: 5px; font-size: 10px; padding: 2px 7px; }
+
   .mover-task { padding: 12px; }
 }

@@ -77,7 +77,7 @@ function Complex() {
               <div key={p.id} className="plan-card" onClick={()=>setPlanModal(p)}>
                 <div className="plan-thumb">
                   <img className="fp-img" src={`assets/plans/${p.file}`} alt={`${p.name} 평면도`} loading="lazy" />
-                  <span className="chip chip-accent" style={{position:'absolute', top:12, right:12}}>{p.id}</span>
+                  <span className="chip chip-accent plan-type-chip">{p.id}</span>
                 </div>
                 <div className="plan-body">
                   <h3 className="name">{p.name}</h3>
