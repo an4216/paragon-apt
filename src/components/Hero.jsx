@@ -32,7 +32,7 @@ function Hero({ onNav, ddayDate }) {
             <div className="hero-meta">
               <div className="hero-meta-item">
                 <div className="label">위치</div>
-                <div className="value">인천 미추홀구 경인북길357번길 6</div>
+                <div className="value">인천시 미추홀구 주안동 590-22번지</div>
               </div>
               <div className="hero-meta-item">
                 <div className="label">규모</div>
