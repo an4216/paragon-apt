@@ -27,6 +27,14 @@ function Nav({ active, onNav, dark, onToggleDark }) {
           </button>
         </div>
       </div>
+      {/* 모바일 전용 가로 스크롤 메뉴 */}
+      <nav className="nav-menu-mobile">
+        {items.slice(1).map(it => (
+          <a key={it.id} href={`#${it.id}`}
+            className={active === it.id ? 'active' : ''}
+            onClick={(e)=>{e.preventDefault(); onNav(it.id);}}>{it.label}</a>
+        ))}
+      </nav>
     </header>
   );
 }

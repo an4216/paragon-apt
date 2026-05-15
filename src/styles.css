@@ -110,6 +110,34 @@ input, button, textarea, select { font: inherit; color: inherit; }
 }
 .nav-menu a:hover { color: var(--text-1); background: var(--surface); }
 .nav-menu a.active { color: var(--text-1); background: var(--surface); box-shadow: var(--shadow-sm); }
+
+/* 모바일 가로 스크롤 메뉴 */
+.nav-menu-mobile {
+  display: none;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.nav-menu-mobile::-webkit-scrollbar { display: none; }
+.nav-menu-mobile a {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: var(--r-full);
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-2);
+  text-decoration: none; white-space: nowrap;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: all .15s;
+}
+.nav-menu-mobile a.active {
+  background: var(--accent); color: white;
+  border-color: var(--accent);
+}
 .nav-actions { display: flex; align-items: center; gap: 8px; }
 .nav-cta {
   padding: 8px 14px; border-radius: var(--r-full);
@@ -512,8 +540,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .section-title { font-size: 22px; }
   .hero { padding: 32px 0 24px; }
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
-  .hero h1 { font-size: 14vw; }
-  .dday-card .big { font-size: 64px; }
+  .hero h1 { font-size: clamp(48px, 12vw, 80px); }
+  .dday-card .big { font-size: 56px; }
   .plan-grid { grid-template-columns: 1fr; }
   .calc-grid { grid-template-columns: 1fr; }
   .dl-grid { grid-template-columns: 1fr; }
@@ -521,12 +549,29 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .footer-inner { grid-template-columns: 1fr 1fr; }
   .hide-mobile { display: none; }
   .show-mobile { display: initial; }
-  .nav-inner { gap: 16px; padding: 0 16px; }
+  .nav-inner { gap: 12px; padding: 0 16px; }
   .nav-menu { font-size: 13px; }
+  .nav-menu-mobile { display: flex; }
   .wrap { padding: 0 16px; }
+  .hero-meta { gap: 18px; }
+  .hero-meta-item .value { font-size: 15px; }
+  .section-head { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .modal { width: 96%; max-height: 92vh; }
 }
 @media (max-width: 540px) {
   .footer-inner { grid-template-columns: 1fr; }
   .bldg-grid { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
-  .section-head { flex-direction: column; align-items: flex-start; }
+  .field-row { grid-template-columns: 1fr; }
+  .hero h1 { font-size: clamp(40px, 14vw, 64px); }
+  .dday-card { padding: 20px; }
+  .dday-card .big { font-size: 48px; }
+  .calc-result .big { font-size: 28px; }
+  .section-title { font-size: 20px; }
+  .wrap { padding: 0 14px; }
+  .nav-logo { font-size: 13px; }
+  .nav-logo-mark { width: 30px; height: 30px; font-size: 12px; }
+  .plan-thumb { aspect-ratio: 1/1; }
+  .fp-img { padding: 10px; }
+  /* Schedule 컨트롤바 한 줄 입력 → 모바일에서 칸 폭 정리 */
+  .mover-task { padding: 12px; }
 }
