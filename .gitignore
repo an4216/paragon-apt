@@ -17,3 +17,9 @@ desktop.ini
 
 # Logs
 *.log
+
+# Screenshots (Windows clipboard captures)
+캡처.PNG
+캡처*.PNG
+Screenshot*.png
+screenshot*.png
