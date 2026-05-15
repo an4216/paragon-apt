@@ -85,7 +85,7 @@ input, button, textarea, select { font: inherit; color: inherit; }
 }
 .nav-inner {
   max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
-  height: 100%; display: flex; align-items: center; gap: 36px;
+  height: var(--nav-h); display: flex; align-items: center; gap: 36px;
 }
 .nav-logo {
   display: flex; align-items: center; gap: 10px;
@@ -537,8 +537,10 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
 /* === Responsive === */
 @media (max-width: 880px) {
-  .section { padding: 56px 0 24px; }
+  .section { padding: 56px 0 24px; scroll-margin-top: calc(var(--nav-h) + 50px); }
   .section-title { font-size: 22px; }
+  /* 모바일에서 nav 높이 해제 → 로고바(64px) + 메뉴 스트립이 자연스럽게 쌓임 */
+  .nav { height: auto; }
   .hero { padding: 32px 0 24px; }
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
   .hero h1 { font-size: clamp(48px, 12vw, 80px); }
