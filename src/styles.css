@@ -556,11 +556,11 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
 /* === Responsive === */
 @media (max-width: 880px) {
-  .section { padding: 56px 0 24px; scroll-margin-top: calc(var(--nav-h) + 50px); }
+  .section { padding: 48px 0 20px; scroll-margin-top: calc(var(--nav-h) + 50px); }
   .section-title { font-size: 22px; }
   /* 모바일에서 nav 높이 해제 → 로고바(64px) + 메뉴 스트립이 자연스럽게 쌓임 */
   .nav { height: auto; }
-  .hero { padding: 32px 0 24px; }
+  .hero { padding: 32px 0 20px; }
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
   .hero h1 { font-size: clamp(48px, 12vw, 80px); }
   .dday-card .big { font-size: 56px; }
@@ -577,8 +577,25 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .wrap { padding: 0 16px; }
   .hero-meta { gap: 18px; }
   .hero-meta-item .value { font-size: 15px; }
-  .section-head { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .section-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
   .modal { width: 96%; max-height: 92vh; }
+
+  /* 카드 패딩 축소 (모바일은 좁아서 28px은 과함) */
+  .card { padding: 16px; }
+  .card-lg { padding: 18px; }
+
+  /* 입력 요소 패딩 축소 + 터치 친화 높이 */
+  .field input, .field select, .field textarea { padding: 10px 12px; font-size: 14px; }
+
+  /* 버튼 터치 영역 확보 (Android/iOS 권장 44×44) */
+  .btn { padding: 10px 14px; }
+  .btn-sm { padding: 8px 12px; font-size: 12.5px; }
+  .btn-lg { padding: 13px 20px; font-size: 14px; }
+
+  /* tabs 가로 스크롤 가능하도록 */
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { white-space: nowrap; flex-shrink: 0; }
 }
 @media (max-width: 540px) {
   .footer-inner { grid-template-columns: 1fr; }
@@ -616,31 +633,49 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
   .mover-task { padding: 12px; }
 
-  /* Schedule 폼 — 모바일에서 깔끔한 스택 레이아웃 */
-  .task-control { padding: 16px; }
-  .task-form { display: flex; flex-direction: column; gap: 10px; }
-  .task-form-title { gap: 4px; }
+  /* Schedule 폼 — 모바일 스택 레이아웃 (각 행 명확히 분리) */
+  .task-control { padding: 14px; }
+  .task-form { display: flex !important; flex-direction: column; gap: 12px; }
+  .task-form-title { gap: 5px; }
   .task-form-title label,
-  .task-form-meta .field label { font-size: 11px; }
+  .task-form-meta .field label {
+    font-size: 11.5px; font-weight: 600;
+    color: var(--text-3); text-transform: uppercase; letter-spacing: .04em;
+  }
   .task-form-meta {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
   }
-  .task-form-meta .field { gap: 4px; }
+  .task-form-meta .field { gap: 5px; }
   .task-form-add {
     grid-column: 1 / -1;
     width: 100%;
     justify-content: center;
-    margin-top: 2px;
-    padding: 10px;
+    padding: 12px;
     font-size: 14px;
+    font-weight: 700;
+    min-height: 44px;
   }
-  .task-actions { gap: 8px; padding-top: 12px; margin-top: 12px; }
-  .task-actions-label { width: 100%; margin-bottom: 2px; }
-  .task-actions-buttons { width: 100%; }
-  .task-actions-buttons .btn-sm { flex: 1 1 auto; justify-content: center; min-width: 0; padding: 7px 10px; }
-  .task-reset { margin-left: 0; flex: 0 1 auto !important; }
+
+  /* 다운로드 액션 영역 — 4개 버튼 균등 분배 + 라벨 위로 */
+  .task-actions { gap: 10px; padding-top: 14px; margin-top: 14px; flex-direction: column; align-items: stretch; }
+  .task-actions-label { width: 100%; margin: 0; }
+  .task-actions-buttons {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .task-actions-buttons .btn-sm {
+    flex: unset;
+    justify-content: center;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 4px;
+    font-size: 11.5px;
+  }
+  .task-reset { margin-left: 0 !important; }
 
   /* Section header sub text 줄바꿈 정리 */
   .section-sub { font-size: 13px; line-height: 1.5; }
@@ -652,4 +687,39 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .footer h4 { margin-bottom: 8px !important; font-size: 12px; }
   .footer ul li { padding: 2px 0 !important; font-size: 13px; }
   .footer .copy { flex-direction: column; gap: 4px; font-size: 11px; }
+
+  /* Hero eyebrow — 좁은 화면에서 자동 줄바꿈 */
+  .hero-eyebrow {
+    display: flex; align-items: flex-start;
+    font-size: 11.5px; line-height: 1.4;
+    margin-bottom: 18px;
+    padding: 8px 12px 8px 6px;
+  }
+  .hero-eyebrow .dot { flex-shrink: 0; margin-top: 1px; }
+  .hero-eyebrow > span:last-child { word-break: keep-all; }
+
+  /* DdayCard stats — 3개 칩 폰트 줄임 */
+  .dday-stat { padding: 10px 8px; }
+  .dday-stat .v { font-size: 16px; }
+
+  /* Hero meta — 깔끔한 세로 정렬 */
+  .hero-meta { gap: 14px; flex-direction: column; align-items: flex-start; }
+  .hero-meta-item { width: 100%; }
+  .hero-meta-item .value { font-size: 14px; }
+
+  /* Hero CTA 버튼 — 풀 폭 + 간격 */
+  .hero-cta-row { display: flex; flex-direction: column; gap: 8px; }
+  .hero-cta-row .btn { width: 100%; justify-content: center; }
+
+  /* 동호수 그리드 — 더 촘촘하게 */
+  .bldg-grid { gap: 4px; }
+  .bldg-cell { font-size: 11px; }
+
+  /* Modal 본문 패딩 축소 */
+  .modal-body { padding: 16px !important; }
+  .modal-head { padding: 16px !important; }
+
+  /* 자료실 카테고리 칩들 가로 스크롤 */
+  .section-head .row { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .section-head .row::-webkit-scrollbar { display: none; }
 }
