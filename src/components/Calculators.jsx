@@ -794,24 +794,28 @@ function InterimCalc() {
               {Array.from({length: rounds}, (_, i) => {
                 const rp = repayments[i] || { paidOff: false, date: '' };
                 const active = rp.paidOff && !!rp.date;
+                const cbId = `paid-off-${i}`;
                 return (
-                  <label key={i} style={{
+                  <div key={i} style={{
                     display:'flex', alignItems:'center', gap:10,
                     padding:'8px 10px',
                     background: active ? 'var(--positive-soft)' : 'var(--surface-2)',
                     borderRadius:6,
                     border: active ? '1px solid var(--positive)' : '1px solid var(--border)',
-                    cursor:'pointer',
                   }}>
                     <input
+                      id={cbId}
                       type="checkbox"
                       checked={rp.paidOff}
                       onChange={()=>togglePaidOff(i)}
                       style={{width:16, height:16, cursor:'pointer', flexShrink:0}}
                     />
-                    <span style={{fontSize:13, color: active?'var(--positive)':'var(--text-2)', fontWeight:700, minWidth:60}}>
+                    <label htmlFor={cbId} style={{
+                      fontSize:13, color: active?'var(--positive)':'var(--text-2)', fontWeight:700,
+                      minWidth:60, cursor:'pointer', userSelect:'none',
+                    }}>
                       {i+1}차 전체상환
-                    </span>
+                    </label>
                     <span style={{flex:1}}></span>
                     {rp.paidOff && (
                       <>
@@ -820,12 +824,11 @@ function InterimCalc() {
                           type="date"
                           value={rp.date || ''}
                           onChange={e=>updateRepayment(i, 'date', e.target.value)}
-                          onClick={e=>e.stopPropagation()}
                           style={{padding:'5px 8px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}}
                         />
                       </>
                     )}
-                  </label>
+                  </div>
                 );
               })}
             </div>
