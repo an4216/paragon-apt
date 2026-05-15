@@ -1,29 +1,17 @@
 // 내 입주 · 이사 일정 — MovingPlanner UI 기반 + 다운로드 (CSV/TXT/ICS)
 function Schedule({ ddayDate }) {
-  // 기본 추천 일정 (이사·시공·입주·행정 통합)
-  // 사전점검·시스템에어컨은 기본에서 제외 (필요 시 직접 추가)
+  // 기본 추천 일정 — 핵심 7개만 (인테리어/시공/통신 등 부가 항목은 필요 시 '할 일 추가'로)
   const TEMPLATE = [
     { id: 't_int',   when: -60, title: '인테리어 상담·계약 (3곳 비교)', cat: '인테리어' },
-    { id: 't_move',  when: -45, title: '이사업체 3곳 견적 비교',         cat: '예약' },
     { id: 't_clean', when: -30, title: '입주청소 업체 예약',             cat: '예약' },
-    { id: 't_net',   when: -21, title: '인터넷·TV 이전 신청',            cat: '통신' },
-    { id: 't_film',  when: -15, title: '필름 시공',                       cat: '인테리어' },
-    { id: 't_gas',   when: -14, title: '도시가스 전출/전입 예약',         cat: '공과금' },
-    { id: 't_app',   when: -14, title: '가전(세탁기/에어컨) 이전 설치 예약', cat: '가전' },
-    { id: 't_wall',  when: -12, title: '도배 시공',                       cat: '인테리어' },
-    { id: 't_floor', when: -10, title: '마루 시공',                       cat: '인테리어' },
     { id: 't_elev',  when: -10, title: '엘리베이터 사용 신청',            cat: '관리' },
     { id: 't_paid',  when: -7,  title: '잔금 납부 + 키 수령',             cat: '잔금' },
-    { id: 't_pack',  when: -3,  title: '이삿짐 정리 / 폐기물 신고',       cat: '정리' },
-    { id: 't_day',   when: 0,   title: '이사 당일 — 엘리베이터 시간 확인', cat: '이사' },
-    { id: 't_clean2',when: 0,   title: '입주청소 (키 수령 직후)',         cat: '청소' },
-    { id: 't_joint', when: 1,   title: '줄눈 시공',                       cat: '시공' },
+    { id: 't_day',   when: 0,   title: '이사 당일 + 입주청소',            cat: '이사' },
     { id: 't_reg',   when: 5,   title: '전입신고 + 확정일자 (정부24)',    cat: '행정' },
-    { id: 't_car',   when: 14,  title: '자동차 주소 변경 (위택스)',       cat: '행정' },
     { id: 't_tax',   when: 30,  title: '취득세 납부 / 등기',               cat: '세금' },
   ];
 
-  const STORAGE_KEY = 'jcp-schedule-v3';
+  const STORAGE_KEY = 'jcp-schedule-v4'; // default 슬림화로 인한 키 bump
   const [tasks, setTasks] = React.useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
