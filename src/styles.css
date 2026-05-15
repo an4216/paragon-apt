@@ -70,6 +70,7 @@ body {
   transition: background-color .25s ease, color .25s ease;
 }
 button { font-family: inherit; cursor: pointer; }
+button.chip, button.btn { -webkit-appearance: none; appearance: none; }
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
 input, button, textarea, select { font: inherit; color: inherit; }
