@@ -40,8 +40,9 @@ start.bat         # Windows
 │       ├── Schedule.jsx        # 입주·이사 통합 일정 + CSV/ICS/TXT 다운로드
 │       ├── Calculators.jsx     # 대출(보금자리론 체증식 포함)/지연금/중도금이자(상환 지원)
 │       └── Downloads.jsx       # 자료실 + FAQ + Footer
-├── assets/plans/               # 평면도 PNG (웹 서빙용, 7종)
-└── floor-plans/                # 평면도 PNG 원본 (7종, 51A/51B/59/62A/62B/76/84)
+├── assets/plans/               # 평면도 PNG (Complex 섹션 썸네일, 7종)
+├── floor-plans/                # 평면도 PNG 원본 (7종, 51A/51B/59/62A/62B/76/84)
+└── floor-plan-docs/            # 평면도 상세 문서 (다운로드용 JPG, 62B/76)
 ```
 
 ## 계산기 데이터 기준
