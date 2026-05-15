@@ -66,6 +66,14 @@ function Complex() {
           </div>
         </div>
 
+        {/* mobile tabs — 콘텐츠 위에 배치하여 즉시 탐색 가능 */}
+        <div className="show-mobile" style={{marginBottom:16}}>
+          <div className="tabs" style={{display:'flex', width:'100%'}}>
+            <button style={{flex:1}} className={tab==='plan'?'active':''} onClick={()=>setTab('plan')}>평면도</button>
+            <button style={{flex:1}} className={tab==='spec'?'active':''} onClick={()=>setTab('spec')}>스펙</button>
+          </div>
+        </div>
+
         {tab === 'plan' && (
           <div className="plan-grid">
             {plans.map(p => (
@@ -96,14 +104,6 @@ function Complex() {
             <SpecCard k="분양 시기" v="2022.05" sub="모집공고 2022.05.23~26" />
           </div>
         )}
-
-        {/* mobile tabs */}
-        <div className="show-mobile" style={{marginTop:24}}>
-          <div className="tabs" style={{display:'flex', width:'100%'}}>
-            <button style={{flex:1}} className={tab==='plan'?'active':''} onClick={()=>setTab('plan')}>평면도</button>
-            <button style={{flex:1}} className={tab==='spec'?'active':''} onClick={()=>setTab('spec')}>스펙</button>
-          </div>
-        </div>
 
         {planModal && <PlanModal plan={planModal} onClose={()=>setPlanModal(null)} />}
       </div>

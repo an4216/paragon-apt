@@ -752,14 +752,13 @@ function InterimCalc() {
 
           <div className="field">
             <label>회차별 시작일 (대출 실행일)</label>
-            <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:8}}>
+            <div className="interim-rounds-grid">
               {Array.from({length: rounds}, (_, i) => (
-                <div key={i} className="row gap-6" style={{alignItems:'center'}}>
+                <div key={i} className="interim-round-item">
                   <span style={{fontSize:12, color:'var(--text-2)', minWidth:42, fontWeight:600}}>{i+1}회차</span>
                   <input type="date"
                     value={roundDates[i] || ''}
-                    onChange={e=>updateRoundDate(i, e.target.value)}
-                    style={{flex:1, padding:'6px 8px', borderRadius:6, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12.5, fontFamily:'inherit'}} />
+                    onChange={e=>updateRoundDate(i, e.target.value)} />
                 </div>
               ))}
             </div>
@@ -769,20 +768,18 @@ function InterimCalc() {
             <label>변동금리 5단계 (62a 기준)</label>
             <div style={{display:'flex', flexDirection:'column', gap:6}}>
               {rateTiers.map((t, i) => (
-                <div key={i} className="row gap-6" style={{alignItems:'center'}}>
-                  <span style={{fontSize:12, color:'var(--text-2)', minWidth:60, fontWeight:600}}>{t.label}</span>
-                  <input type="number" step="0.01"
+                <div key={i} className="interim-tier-row">
+                  <span className="tier-label">{t.label}</span>
+                  <input type="number" step="0.01" className="tier-rate"
                     value={t.rate}
-                    onChange={e=>updateTier(i, 'rate', e.target.value)}
-                    style={{width:70, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12.5, fontFamily:'inherit', textAlign:'right'}} />
+                    onChange={e=>updateTier(i, 'rate', e.target.value)} />
                   <span style={{fontSize:11.5, color:'var(--text-2)'}}>%</span>
                   <span style={{fontSize:11, color:'var(--text-3)'}}>적용:</span>
-                  <input type="date"
+                  <input type="date" className="tier-date"
                     value={t.start || ''}
                     onChange={e=>updateTier(i, 'start', e.target.value || null)}
                     disabled={i===0}
-                    title={i===0?'기본(A) 금리는 회차 시작일부터 적용':''}
-                    style={{flex:1, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background: i===0?'var(--bg)':'var(--surface)', fontSize:12, fontFamily:'inherit'}} />
+                    title={i===0?'기본(A) 금리는 회차 시작일부터 적용':''} />
                 </div>
               ))}
             </div>
@@ -800,20 +797,15 @@ function InterimCalc() {
                 const minDate = rs;
                 const maxDate = moveDate;
                 const invalid = rp.paidOff && rp.date && (rp.date <= rs || rp.date > moveDate);
+                const itemClass = `interim-repay-item${invalid ? ' invalid' : active ? ' active' : ''}`;
                 return (
-                  <div key={i} style={{
-                    display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
-                    padding:'8px 10px',
-                    background: invalid ? 'var(--warning-soft)' : active ? 'var(--positive-soft)' : 'var(--surface-2)',
-                    borderRadius:6,
-                    border: invalid ? '1px solid var(--warning)' : active ? '1px solid var(--positive)' : '1px solid var(--border)',
-                  }}>
+                  <div key={i} className={itemClass}>
                     <input
                       id={cbId}
                       type="checkbox"
                       checked={rp.paidOff}
                       onChange={()=>togglePaidOff(i)}
-                      style={{width:16, height:16, cursor:'pointer', flexShrink:0}}
+                      style={{width:18, height:18, cursor:'pointer', flexShrink:0}}
                     />
                     <label htmlFor={cbId} style={{
                       fontSize:13, color: invalid?'var(--warning)':active?'var(--positive)':'var(--text-2)', fontWeight:700,
@@ -821,7 +813,7 @@ function InterimCalc() {
                     }}>
                       {i+1}차 전체상환
                     </label>
-                    <span style={{flex:1, minWidth:0}}></span>
+                    <span className="repay-spacer"></span>
                     {rp.paidOff && (
                       <>
                         <span style={{fontSize:11, color:'var(--text-3)'}}>상환일</span>
@@ -831,12 +823,11 @@ function InterimCalc() {
                           min={minDate}
                           max={maxDate}
                           onChange={e=>updateRepayment(i, 'date', e.target.value)}
-                          style={{padding:'5px 8px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}}
                         />
                       </>
                     )}
                     {invalid && (
-                      <div style={{width:'100%', fontSize:11, color:'var(--warning)', marginTop:2}}>
+                      <div className="interim-repay-warning">
                         ⚠ 상환일이 {i+1}차 시작일({rs}) 이후 ~ 입주예정일({moveDate}) 사이여야 합니다.
                       </div>
                     )}

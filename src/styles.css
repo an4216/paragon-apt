@@ -59,6 +59,11 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   font-family: var(--font-sans);
   background: var(--bg);
@@ -69,9 +74,11 @@ body {
   font-feature-settings: "ss01", "cv11";
   transition: background-color .25s ease, color .25s ease;
 }
-button { font-family: inherit; cursor: pointer; }
+/* 가로 스크롤 방지 — sticky nav 영향 없도록 main에만 적용 */
+main { overflow-x: clip; }
+button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button.chip, button.btn { -webkit-appearance: none; appearance: none; }
-a { color: inherit; text-decoration: none; }
+a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 img { display: block; max-width: 100%; }
 input, button, textarea, select { font: inherit; color: inherit; }
 
@@ -188,7 +195,8 @@ input, button, textarea, select { font: inherit; color: inherit; }
 /* === Form === */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: 12.5px; color: var(--text-2); font-weight: 500; }
-.field input, .field select, .field textarea,
+.field input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.field select, .field textarea,
 .task-form-title input {
   width: 100%; padding: 12px 14px; border-radius: var(--r-sm);
   border: 1px solid var(--border); background: var(--surface-2);
@@ -200,6 +208,14 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .task-form-title input:focus {
   outline: none; border-color: var(--text-1); background: var(--surface);
 }
+/* 체크박스/라디오 — 강제로 안전한 크기 (모바일 min-height 영향 방지) */
+.field input[type="checkbox"],
+.field input[type="radio"] {
+  width: 18px; height: 18px; min-width: 18px; min-height: 18px;
+  padding: 0; margin: 0; flex-shrink: 0;
+  accent-color: var(--text-1);
+  cursor: pointer;
+}
 .field-hint { font-size: 11.5px; color: var(--text-3); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -208,7 +224,10 @@ input, button, textarea, select { font: inherit; color: inherit; }
   position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
   color: var(--text-3); font-size: 13px; pointer-events: none;
 }
-.input-suffix input { padding-right: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+/* specificity (0,4,1) — 위 .field input:not(...)와 동일하게 맞춤 */
+.input-suffix input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+  padding-right: 40px; text-align: right; font-variant-numeric: tabular-nums;
+}
 
 /* === Chip / Pill === */
 .chip {
@@ -345,8 +364,20 @@ input, button, textarea, select { font: inherit; color: inherit; }
 
 /* === Schedule Task Control Bar === */
 .task-control { margin-bottom: 24px; }
-.task-form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
-.task-form-title { display: flex; flex-direction: column; gap: 6px; grid-column: 1 / 2; }
+.task-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: flex-end;
+}
+.task-form-heading {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--text-1);
+  margin: 0 0 2px;
+}
+.task-form-heading svg { color: var(--accent); flex-shrink: 0; }
+.task-form-title { display: flex; flex-direction: column; gap: 6px; }
 .task-form-title label,
 .task-form-meta .field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
 .task-form-title input { width: 100%; }
@@ -354,6 +385,10 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .task-form-meta .field { display: flex; flex-direction: column; gap: 6px; }
 .task-form-meta .field select { width: 100%; }
 .task-form-add { white-space: nowrap; }
+.task-form-add:disabled {
+  opacity: .45; cursor: not-allowed;
+  background: var(--surface-2); color: var(--text-3); border-color: var(--border);
+}
 .task-actions {
   margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -558,136 +593,276 @@ input, button, textarea, select { font: inherit; color: inherit; }
   to { transform: translateX(-50%); }
 }
 
+/* === Helper classes (Schedule progress / InterimCalc complex layouts) === */
+.schedule-progress { min-width: 200px; }
+.interim-rounds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.interim-rounds-grid .interim-round-item {
+  display: flex; align-items: center; gap: 6px;
+}
+.interim-rounds-grid .interim-round-item > input[type="date"] {
+  flex: 1; min-width: 0;
+  padding: 6px 8px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 12.5px; font-family: inherit;
+}
+.interim-tier-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.interim-tier-row .tier-label { font-size: 12px; color: var(--text-2); min-width: 60px; font-weight: 600; }
+.interim-tier-row .tier-rate {
+  width: 70px; padding: 5px 6px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 12.5px; font-family: inherit; text-align: right;
+}
+.interim-tier-row .tier-date {
+  flex: 1; min-width: 0;
+  padding: 5px 6px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 12px; font-family: inherit;
+}
+.interim-tier-row .tier-date:disabled { background: var(--bg); }
+
+.interim-repay-item {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; border-radius: 6px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  transition: background .15s, border-color .15s;
+}
+.interim-repay-item.active { background: var(--positive-soft); border-color: var(--positive); }
+.interim-repay-item.invalid { background: var(--warning-soft); border-color: var(--warning); }
+.interim-repay-item input[type="date"] {
+  padding: 5px 8px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 12px; font-family: inherit;
+}
+.interim-repay-item .repay-spacer { flex: 1; min-width: 0; }
+.interim-repay-warning {
+  width: 100%; font-size: 11px; color: var(--warning); margin-top: 2px;
+}
+
 /* === Responsive === */
+/* --- 큰 태블릿 (~1024px) --- */
+@media (max-width: 1024px) {
+  :root { --max-w: 100%; }
+  .wrap, .nav-inner { padding: 0 24px; }
+  .plan-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-inner { grid-template-columns: 2fr 1fr 1fr; }
+  .footer-inner > div:nth-child(4) { display: none; }
+}
+
+/* --- 태블릿 / 작은 데스크톱 (~880px) --- */
 @media (max-width: 880px) {
-  .section { padding: 48px 0 20px; scroll-margin-top: calc(var(--nav-h) + 50px); }
+  .section { padding: 56px 0 20px; scroll-margin-top: calc(var(--nav-h) + 56px); }
   .section-title { font-size: 22px; }
   /* 모바일에서 nav 높이 해제 → 로고바(64px) + 메뉴 스트립이 자연스럽게 쌓임 */
   .nav { height: auto; }
   .hero { padding: 32px 0 20px; }
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
-  .hero h1 { font-size: clamp(48px, 12vw, 80px); }
+  .hero h1 { font-size: clamp(44px, 10vw, 72px); line-height: .98; }
+  .hero-sub { font-size: 15.5px; }
+  .dday-card { padding: 24px; }
   .dday-card .big { font-size: 56px; }
   .plan-grid { grid-template-columns: 1fr; }
-  .calc-grid { grid-template-columns: 1fr; }
+  .calc-grid { grid-template-columns: 1fr; gap: 16px; }
   .dl-grid { grid-template-columns: 1fr; }
   .schedule-grid { grid-template-columns: 1fr !important; }
   .footer-inner { grid-template-columns: 1fr 1fr; }
+  .footer-inner > div:nth-child(4) { display: block; }
   .hide-mobile { display: none; }
   .show-mobile { display: initial; }
   .nav-inner { gap: 12px; padding: 0 16px; }
   .nav-menu { font-size: 13px; }
   .nav-menu-mobile { display: flex; }
+  .nav-menu-mobile a {
+    padding: 9px 14px; font-size: 13px;
+    min-height: 36px; display: inline-flex; align-items: center;
+  }
   .wrap { padding: 0 16px; }
   .hero-meta { gap: 18px; }
   .hero-meta-item .value { font-size: 15px; }
-  .section-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+  .section-head { flex-direction: column; align-items: stretch; gap: 14px; margin-bottom: 20px; }
+  .schedule-progress { min-width: 0; width: 100%; }
   .modal { width: 96%; max-height: 92vh; }
 
-  /* 카드 패딩 축소 (모바일은 좁아서 28px은 과함) */
+  /* 카드 패딩 축소 */
   .card { padding: 16px; }
   .card-lg { padding: 18px; }
 
-  /* 입력 요소 패딩 축소 + 터치 친화 높이 */
-  .field input, .field select, .field textarea,
-  .task-form-title input { padding: 10px 12px; font-size: 14px; }
+  /* 입력 요소 패딩 + 터치 영역 — iOS 자동 줌 방지를 위해 폼 입력은 16px
+     체크박스/라디오/range는 제외 (base에서 18px 고정 처리됨) */
+  .field input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .field select, .field textarea,
+  .task-form-title input {
+    padding: 11px 12px; font-size: 16px;
+    min-height: 44px;
+  }
+  /* input-suffix는 우측에 단위(만원/%/원) 들어가므로 padding-right 유지
+     — 위 .field input:not(...) 룰의 specificity (0,4,1)와 맞춤 */
+  .input-suffix input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+    padding-right: 40px;
+  }
+  /* 보조 입력(좁은 인라인) — 16px 유지하되 패딩 축소 */
+  .interim-rounds-grid .interim-round-item input[type="date"],
+  .interim-tier-row .tier-rate,
+  .interim-tier-row .tier-date,
+  .interim-repay-item input[type="date"] { font-size: 14px; min-height: 36px; }
+
+  /* === Section 02 입주·이사 일정 폼 (모바일 통합 ≤880) ===
+     구조: 헤딩 → 할 일 → 시점·카테고리(2-col) → 일정 추가
+     일관된 12px 리듬, 헤딩 하단에 구분선으로 정체성 명확화
+     align-items: stretch는 데스크톱 grid의 flex-end 상속 차단 (없으면 자식들이 우측 정렬됨) */
+  .task-form {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .task-form-heading {
+    margin: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .task-form-title { gap: 6px; }
+  .task-form-title label,
+  .task-form-meta .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .task-form-meta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .task-form-meta .field { gap: 6px; }
+  .task-form-add {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 14.5px;
+    font-weight: 700;
+    min-height: 52px;
+    margin-top: 4px;
+  }
 
   /* 버튼 터치 영역 확보 (Android/iOS 권장 44×44) */
-  .btn { padding: 10px 14px; }
-  .btn-sm { padding: 8px 12px; font-size: 12.5px; }
-  .btn-lg { padding: 13px 20px; font-size: 14px; }
+  .btn { padding: 11px 16px; min-height: 44px; }
+  .btn-sm { padding: 9px 13px; font-size: 12.5px; min-height: 38px; }
+  .btn-lg { padding: 14px 22px; font-size: 14.5px; min-height: 48px; }
 
   /* tabs 가로 스크롤 가능하도록 */
   .tabs { overflow-x: auto; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
-  .tabs button { white-space: nowrap; flex-shrink: 0; }
+  .tabs button { white-space: nowrap; flex-shrink: 0; min-height: 36px; }
+
+  /* Marquee 모바일 크기 축소 */
+  .marquee { padding: 12px 0; margin-top: 24px; }
+  .marquee-track { font-size: 13px; gap: 32px; animation-duration: 24s; }
+
+  /* Schedule mover-task 삭제 버튼 터치 영역 */
+  .mover-task { grid-template-columns: 24px 1fr 40px; padding: 12px 14px; gap: 12px; }
+  .mover-task .btn-ghost { padding: 8px !important; min-height: 36px; min-width: 36px; justify-content: center; }
+
+  /* FAQ open height 확장 */
+  .faq-item.open .faq-a { max-height: 600px; }
+
+  /* InterimCalc 좁은 화면 정리 */
+  .interim-rounds-grid { grid-template-columns: 1fr; gap: 6px; }
+  .interim-tier-row .tier-label { min-width: 52px; font-size: 11.5px; }
 }
+
+/* --- 모바일 (~540px) --- */
 @media (max-width: 540px) {
   .footer-inner { grid-template-columns: 1fr; }
   .bldg-grid { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
-  .field-row { grid-template-columns: 1fr; }
-  .hero h1 { font-size: clamp(40px, 14vw, 64px); }
-  .dday-card { padding: 20px; }
-  .dday-card .big { font-size: 48px; }
-  .calc-result .big { font-size: 28px; }
-  .section-title { font-size: 20px; }
+  .field-row { grid-template-columns: 1fr; gap: 10px; }
+  .hero { padding: 24px 0 16px; }
+  .hero h1 { font-size: clamp(38px, 12vw, 60px); margin-bottom: 20px; }
+  .hero-sub { font-size: 14.5px; margin-bottom: 24px; }
+  .dday-card { padding: 22px; border-radius: var(--r-lg); }
+  .dday-card .big { font-size: 52px; }
+  .dday-card .undecided { font-size: 34px; }
+  .dday-card .pulse { top: 18px; right: 18px; font-size: 10px; }
+  .calc-result { padding: 22px; }
+  .calc-result .big { font-size: 30px; }
+  .section { padding: 44px 0 16px; }
+  .section-title { font-size: 20px; line-height: 1.25; }
   .wrap { padding: 0 14px; }
-  .nav-logo { font-size: 13px; }
+  .nav-inner { gap: 10px; padding: 0 14px; }
+  .nav-logo { font-size: 13.5px; }
   .nav-logo-mark { width: 30px; height: 30px; font-size: 12px; }
 
   /* 평면도 카드 — 모바일에서 가로 리스트 레이아웃 (썸네일 + 정보) */
   .plan-grid { gap: 8px; }
   .plan-card {
     display: grid;
-    grid-template-columns: 96px 1fr;
+    grid-template-columns: 100px 1fr;
     align-items: stretch;
   }
   .plan-thumb {
-    width: 96px; height: 96px;
+    width: 100px; height: 100px;
     aspect-ratio: unset;
     border-bottom: none;
     border-right: 1px solid var(--border);
   }
   .fp-img { padding: 4px; }
-  .plan-body { padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-  .plan-body .name { font-size: 14px; margin: 0; }
-  .plan-body .area { font-size: 11.5px; line-height: 1.35; }
-  .plan-body .specs { margin-top: 4px; gap: 5px; }
+  .plan-body { padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .plan-body .name { font-size: 14.5px; margin: 0; font-weight: 700; }
+  .plan-body .area { font-size: 11.5px; line-height: 1.4; color: var(--text-2); }
+  .plan-body .specs { margin-top: 6px; gap: 5px; }
   .plan-body .specs .chip { font-size: 10.5px; padding: 3px 8px; }
   .plan-type-chip { top: 5px; right: 5px; font-size: 10px; padding: 2px 7px; }
 
-  .mover-task { padding: 12px; }
+  .mover-task { padding: 12px; grid-template-columns: 22px 1fr 36px; gap: 10px; }
+  .mover-title { font-size: 13.5px; }
+  .mover-when { font-size: 11.5px; }
+  .mover-tag { font-size: 10.5px; }
 
-  /* Schedule 폼 — 모바일 스택 레이아웃 (각 행 명확히 분리) */
+  /* Schedule 폼 — 580px 이하 카드 패딩만 축소 (그 외는 ≤880 규칙 상속) */
   .task-control { padding: 14px; }
-  .task-form { display: flex !important; flex-direction: column; gap: 12px; }
-  .task-form-title { gap: 5px; }
-  .task-form-title label,
-  .task-form-meta .field label {
-    font-size: 11.5px; font-weight: 600;
-    color: var(--text-3); text-transform: uppercase; letter-spacing: .04em;
-  }
-  .task-form-meta {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .task-form-meta .field { gap: 5px; }
-  .task-form-add {
-    grid-column: 1 / -1;
-    width: 100%;
-    justify-content: center;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    min-height: 44px;
-  }
 
-  /* 다운로드 액션 영역 — 4개 버튼 균등 분배 + 라벨 위로 */
+  /* 다운로드 액션 — 3개 균등 + 초기화는 분리(아래 별도 행, 작게) */
   .task-actions { gap: 10px; padding-top: 14px; margin-top: 14px; flex-direction: column; align-items: stretch; }
   .task-actions-label { width: 100%; margin: 0; }
   .task-actions-buttons {
     width: 100%;
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
   }
   .task-actions-buttons .btn-sm {
     flex: unset;
     justify-content: center;
     min-width: 0;
-    min-height: 40px;
-    padding: 8px 4px;
+    min-height: 42px;
+    padding: 9px 4px;
+    font-size: 12px;
+  }
+  .task-actions-buttons .task-reset {
+    grid-column: 1 / -1;
+    margin-left: 0 !important;
+    margin-top: 4px;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-3) !important;
+    min-height: 36px;
     font-size: 11.5px;
   }
-  .task-reset { margin-left: 0 !important; }
+  .task-actions-buttons .task-reset:hover { color: var(--danger) !important; border-color: var(--danger); }
 
   /* Section header sub text 줄바꿈 정리 */
   .section-sub { font-size: 13px; line-height: 1.5; }
   .section-eyebrow { font-size: 11px; }
 
   /* Footer 모바일 정리 */
-  .footer { padding: 32px 0 20px !important; }
+  .footer { padding: 32px 0 20px !important; margin-top: 56px; }
   .footer-inner { gap: 24px !important; }
   .footer h4 { margin-bottom: 8px !important; font-size: 12px; }
   .footer ul li { padding: 2px 0 !important; font-size: 13px; }
@@ -703,28 +878,99 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .hero-eyebrow .dot { flex-shrink: 0; margin-top: 1px; }
   .hero-eyebrow > span:last-child { word-break: keep-all; }
 
-  /* DdayCard stats — 3개 칩 폰트 줄임 */
-  .dday-stat { padding: 10px 8px; }
+  /* DdayCard stats — 2-col + 첫칸 풀폭 (긴 날짜 "2025.12.31" 잘림 방지) */
+  .dday-stats { grid-template-columns: 1fr 1fr; }
+  .dday-stat:first-child { grid-column: 1 / -1; }
+  .dday-stat { padding: 10px 12px; }
+  .dday-stat .l { font-size: 10px; }
   .dday-stat .v { font-size: 16px; }
 
   /* Hero meta — 깔끔한 세로 정렬 */
-  .hero-meta { gap: 14px; flex-direction: column; align-items: flex-start; }
+  .hero-meta { gap: 12px; flex-direction: column; align-items: flex-start; margin-bottom: 24px; }
   .hero-meta-item { width: 100%; }
+  .hero-meta-item .label { font-size: 11px; }
   .hero-meta-item .value { font-size: 14px; }
 
-  /* Hero CTA 버튼 — 풀 폭 + 간격 */
-  .hero-cta-row { display: flex; flex-direction: column; gap: 8px; }
-  .hero-cta-row .btn { width: 100%; justify-content: center; }
+  /* Hero CTA — primary 풀폭, 나머지 2개는 가로 분할 (위계 + 공간 절약) */
+  .hero-cta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hero-cta-row .btn { width: 100%; justify-content: center; padding: 12px 8px; font-size: 13.5px; }
+  .hero-cta-row .btn-primary { grid-column: 1 / -1; padding: 14px; font-size: 14.5px; }
 
   /* 동호수 그리드 — 더 촘촘하게 */
   .bldg-grid { gap: 4px; }
   .bldg-cell { font-size: 11px; }
 
   /* Modal 본문 패딩 축소 */
+  .modal-backdrop { padding: 12px; }
   .modal-body { padding: 16px !important; }
   .modal-head { padding: 16px !important; }
+  .modal-head h3 { font-size: 17px; }
 
-  /* 자료실 카테고리 칩들 가로 스크롤 */
-  .section-head .row { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  /* 자료실 카테고리 칩들 가로 스크롤 + 시각적 힌트 */
+  .section-head .row {
+    overflow-x: auto; scrollbar-width: none;
+    padding-bottom: 4px; margin: 0 -14px; padding-left: 14px; padding-right: 14px;
+    flex-wrap: nowrap !important;
+  }
   .section-head .row::-webkit-scrollbar { display: none; }
+  .section-head .row .chip { flex-shrink: 0; min-height: 30px; padding: 6px 12px; }
+
+  /* dl-item 모바일 정리 */
+  .dl-item { padding: 12px 14px; gap: 12px; }
+  .dl-icon { width: 36px; height: 44px; font-size: 9.5px; }
+  .dl-name { font-size: 13px; line-height: 1.3; }
+  .dl-info { font-size: 11px; flex-wrap: wrap; gap: 6px; }
+
+  /* FAQ 모바일 패딩 */
+  .faq-item { padding: 16px; }
+  .faq-q { font-size: 14px; }
+  .faq-a { font-size: 13.5px; line-height: 1.6; }
+
+  /* DelayCalc 평형 타입 라디오 grid */
+  .calc-result .big { font-size: 28px; }
+  .calc-result .label { font-size: 12px; }
+  .calc-result .sub { font-size: 12.5px; }
+
+  /* tabs — 가로 스크롤 그라데이션 힌트 */
+  .tabs { padding: 3px; }
+  .tabs button { padding: 8px 14px; font-size: 12.5px; min-height: 38px; }
+}
+
+/* --- 매우 좁은 화면 (~380px) --- */
+@media (max-width: 380px) {
+  .wrap { padding: 0 12px; }
+  .nav-inner { padding: 0 12px; }
+  .nav-logo small { display: none; }
+  .hero h1 { font-size: clamp(32px, 14vw, 44px); }
+  .dday-card { padding: 18px; }
+  .dday-card .big { font-size: 44px; }
+  .dday-card .undecided { font-size: 28px; }
+  .dday-stat .v { font-size: 14px; }
+  .section-title { font-size: 18px; }
+  .calc-result .big { font-size: 24px; }
+  .plan-card { grid-template-columns: 84px 1fr; }
+  .plan-thumb { width: 84px; height: 84px; }
+  .plan-body { padding: 10px 12px; }
+  .task-actions-buttons { grid-template-columns: 1fr 1fr; }
+  .hero-cta-row { grid-template-columns: 1fr; }
+  .hero-cta-row .btn { padding: 13px 12px; }
+}
+
+/* --- 가로 모드 / 짧은 높이 --- */
+@media (max-width: 880px) and (max-height: 480px) and (orientation: landscape) {
+  .hero { padding: 16px 0 12px; }
+  .hero h1 { font-size: clamp(32px, 7vw, 48px); margin-bottom: 12px; }
+  .hero-sub { margin-bottom: 16px; }
+  .section { padding: 32px 0 16px; }
+}
+
+/* --- 모션 감소 선호 사용자 --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track { animation: none !important; }
 }

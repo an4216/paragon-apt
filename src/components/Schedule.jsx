@@ -156,7 +156,7 @@ function Schedule({ ddayDate }) {
               </div>
             )}
           </div>
-          <div style={{minWidth:200}}>
+          <div className="schedule-progress">
             <div className="row-between" style={{marginBottom:6}}>
               <span className="dim" style={{fontSize:12, fontWeight:600}}>완료</span>
               <span className="num" style={{fontSize:14, fontWeight:700}}>{doneCount} / {tasks.length}</span>
@@ -168,11 +168,16 @@ function Schedule({ ddayDate }) {
         {/* 컨트롤 바: 항목 추가 + 다운로드 */}
         <div className="card card-lg task-control">
           <div className="task-form">
+            <div className="task-form-heading">
+              <Icon.Plus size={14} />
+              <span>새 할 일 추가</span>
+            </div>
             <div className="task-form-title">
-              <label>할 일 추가</label>
+              <label htmlFor="newTaskTitle">할 일</label>
               <input
+                id="newTaskTitle"
                 type="text"
-                placeholder="예: 우편물 이전 / 사전점검 방문"
+                placeholder="예: 우편물 이전, 사전점검 방문"
                 value={newTitle}
                 onChange={e=>setNewTitle(e.target.value)}
                 onKeyDown={e=>{if(e.key==='Enter') addTask();}}
@@ -180,8 +185,8 @@ function Schedule({ ddayDate }) {
             </div>
             <div className="task-form-meta">
               <div className="field">
-                <label>시점</label>
-                <select value={newWhen} onChange={e=>setNewWhen(+e.target.value)}>
+                <label htmlFor="newTaskWhen">시점</label>
+                <select id="newTaskWhen" value={newWhen} onChange={e=>setNewWhen(+e.target.value)}>
                   <option value={-60}>D-60 (2달 전)</option>
                   <option value={-45}>D-45</option>
                   <option value={-30}>D-30 (1달 전)</option>
@@ -196,18 +201,18 @@ function Schedule({ ddayDate }) {
                 </select>
               </div>
               <div className="field">
-                <label>카테고리</label>
-                <select value={newCat} onChange={e=>setNewCat(e.target.value)}>
+                <label htmlFor="newTaskCat">카테고리</label>
+                <select id="newTaskCat" value={newCat} onChange={e=>setNewCat(e.target.value)}>
                   <option>점검</option><option>인테리어</option><option>시공</option>
                   <option>청소</option><option>예약</option><option>통신</option>
                   <option>공과금</option><option>가전</option><option>관리</option>
                   <option>잔금</option><option>이사</option><option>행정</option><option>세금</option>
                 </select>
               </div>
-              <button className="btn btn-primary task-form-add" onClick={addTask}>
-                <Icon.Plus /> 추가
-              </button>
             </div>
+            <button className="btn btn-primary task-form-add" onClick={addTask} disabled={!newTitle.trim()}>
+              <Icon.Plus /> 일정 추가
+            </button>
           </div>
 
           <div className="task-actions">
