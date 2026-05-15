@@ -3,9 +3,8 @@ function Nav({ active, onNav, dark, onToggleDark }) {
   const items = [
     { id: 'home', label: '홈' },
     { id: 'complex', label: '단지정보' },
-    { id: 'schedule', label: '입주일정' },
+    { id: 'schedule', label: '입주·이사 일정' },
     { id: 'calc', label: '계산기' },
-    { id: 'mover', label: '이사플래너' },
     { id: 'downloads', label: '자료실' },
   ];
   return (

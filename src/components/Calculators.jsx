@@ -43,6 +43,9 @@ function LoanCalc() {
   const [method, setMethod] = React.useState(LOAN_PRESETS.bogeumjari.method);
   const [defer, setDefer] = React.useState(false);
   const [deferMonths, setDeferMonths] = React.useState(12);
+  // 체증식 (보금자리론): 5년 단위로 납입금이 증가
+  const [stepRatePct, setStepRatePct] = React.useState(12); // % 인상률 (5년 주기)
+  const STEP_PERIOD_MONTHS = 60; // 5년 고정
 
   // 대출 종류 변경 시 기본값 자동 반영
   const switchType = (t) => {
@@ -105,6 +108,45 @@ function LoanCalc() {
         lastMonth: monthlyPrincipal + lastInterest,
       };
     }
+    if (method === 'graduated') {
+      // 체증식: 5년 단위로 납입금이 stepRatePct%씩 증가
+      // PV = m₀ × Σ_{k=0}^{B-1} g^k × AF_k × discount^(k·60)
+      // 거치 미적용
+      const g = 1 + stepRatePct / 100;
+      const numBlocks = Math.ceil(payMonths / STEP_PERIOD_MONTHS);
+      const lastBlockMonths = payMonths - (numBlocks - 1) * STEP_PERIOD_MONTHS;
+      const af = (n) => monthlyRate === 0 ? n : (1 - Math.pow(1 + monthlyRate, -n)) / monthlyRate;
+
+      let denom = 0;
+      for (let k = 0; k < numBlocks; k++) {
+        const blockN = (k === numBlocks - 1) ? lastBlockMonths : STEP_PERIOD_MONTHS;
+        denom += Math.pow(g, k) * af(blockN) * Math.pow(1 + monthlyRate, -k * STEP_PERIOD_MONTHS);
+      }
+      const m0 = denom > 0 ? principalWon / denom : 0;
+      const mFinal = m0 * Math.pow(g, Math.max(0, numBlocks - 1));
+
+      let totalPaid = 0;
+      const blocks = [];
+      for (let k = 0; k < numBlocks; k++) {
+        const blockN = (k === numBlocks - 1) ? lastBlockMonths : STEP_PERIOD_MONTHS;
+        const payment = m0 * Math.pow(g, k);
+        totalPaid += payment * blockN;
+        blocks.push({
+          label: `${k*5+1}~${k*5 + blockN/12}년차`,
+          months: blockN,
+          payment,
+        });
+      }
+      return {
+        monthly: m0,
+        monthlyDefer: 0,
+        total: totalPaid,
+        totalInterest: totalPaid - principalWon,
+        firstMonth: m0,
+        lastMonth: mFinal,
+        blocks,
+      };
+    }
     // 만기일시 (전 기간 이자만 + 만기 원금)
     const monthlyInt = principalWon * monthlyRate;
     return {
@@ -115,7 +157,7 @@ function LoanCalc() {
       firstMonth: monthlyInt,
       lastMonth: monthlyInt + principalWon,
     };
-  }, [principalWon, monthlyRate, totalMonths, payMonths, deferM, method]);
+  }, [principalWon, monthlyRate, totalMonths, payMonths, deferM, method, stepRatePct]);
 
   const preset = LOAN_PRESETS[type];
 
@@ -177,17 +219,37 @@ function LoanCalc() {
 
           <div className="field">
             <label>상환 방식</label>
-            <div className="tabs" style={{display:'flex'}}>
-              <button style={{flex:1}} className={method==='equal'?'active':''} onClick={()=>setMethod('equal')}>원리금균등</button>
-              <button style={{flex:1}} className={method==='equalPrincipal'?'active':''} onClick={()=>setMethod('equalPrincipal')}>원금균등</button>
-              <button style={{flex:1}} className={method==='bullet'?'active':''} onClick={()=>setMethod('bullet')} disabled={type==='bogeumjari'} title={type==='bogeumjari'?'보금자리론은 만기일시 불가':''}>만기일시</button>
+            <div className="tabs" style={{display:'flex', flexWrap:'wrap'}}>
+              <button style={{flex:1, minWidth:90}} className={method==='equal'?'active':''} onClick={()=>setMethod('equal')}>원리금균등</button>
+              <button style={{flex:1, minWidth:90}} className={method==='equalPrincipal'?'active':''} onClick={()=>setMethod('equalPrincipal')}>원금균등</button>
+              <button style={{flex:1, minWidth:90}} className={method==='graduated'?'active':''} onClick={()=>{setMethod('graduated'); setDefer(false);}}>체증식</button>
+              <button style={{flex:1, minWidth:90}} className={method==='bullet'?'active':''} onClick={()=>setMethod('bullet')} disabled={type==='bogeumjari'} title={type==='bogeumjari'?'보금자리론은 만기일시 불가':''}>만기일시</button>
             </div>
             <div className="field-hint">
               {method==='equal' && '매월 같은 금액을 납부 (원금+이자 합계 동일)'}
               {method==='equalPrincipal' && '원금은 매월 동일, 이자는 점점 감소 — 초기 부담이 큼'}
+              {method==='graduated' && '5년마다 납입금이 일정 비율 증가 — 초기 부담을 줄이는 보금자리론 옵션'}
               {method==='bullet' && '매월 이자만 납부, 만기에 원금 일시 상환'}
             </div>
           </div>
+
+          {/* 체증식: 5년 단위 인상률 설정 */}
+          {method === 'graduated' && (
+            <div className="field" style={{padding:'12px 14px', background:'var(--surface)', border:'1px dashed var(--border-strong)', borderRadius:8}}>
+              <label style={{fontWeight:600}}>5년 주기 인상률</label>
+              <div className="input-suffix" style={{marginTop:6}}>
+                <input type="number" step="1" min="0" max="30" value={stepRatePct} onChange={e=>setStepRatePct(+e.target.value || 0)} />
+                <span>%</span>
+              </div>
+              <div className="slider-row">
+                <input type="range" min="0" max="25" step="1" value={stepRatePct} onChange={e=>setStepRatePct(+e.target.value)} />
+                <div className="val">{stepRatePct}%</div>
+              </div>
+              <div className="field-hint">
+                5년마다 월 납입금이 {stepRatePct}%씩 증가 (보금자리론 표준: 12%). 30년 기준 6구간으로 분할.
+              </div>
+            </div>
+          )}
 
           {/* 집단대출: 1년 거치 체크박스 */}
           {type === 'group' && (
@@ -223,7 +285,9 @@ function LoanCalc() {
 
         <div className="calc-result">
           <div className="label">
-            {deferM > 0 ? `거치기간 월 납부` : `월 상환액${method==='equalPrincipal' ? ' (첫 달)' : ''}`}
+            {deferM > 0 ? `거치기간 월 납부` :
+             method==='graduated' ? `초기 5년 월 상환액` :
+             `월 상환액${method==='equalPrincipal' ? ' (첫 달)' : ''}`}
           </div>
           <div className="big num">{fmt.eok(result.firstMonth).replace('억 ', '억 ')}<span className="unit">원</span></div>
           <div className="sub">
@@ -268,6 +332,21 @@ function LoanCalc() {
                 <span className="l">만기 일시 상환액</span>
                 <span className="v num">{fmt.eok(result.lastMonth)}원</span>
               </div>
+            )}
+            {method==='graduated' && result.blocks && (
+              <>
+                <div style={{fontSize:11.5, fontWeight:700, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em', marginTop:10, marginBottom:4}}>5년 구간별 월 납입금</div>
+                {result.blocks.map((b, i) => (
+                  <div key={i} className="breakdown-row">
+                    <span className="l">{b.label} ({b.months}개월)</span>
+                    <span className="v num">{fmt.eok(b.payment)}원</span>
+                  </div>
+                ))}
+                <div className="breakdown-row">
+                  <span className="l">최종 5년 월 상환액</span>
+                  <span className="v num">{fmt.eok(result.lastMonth)}원</span>
+                </div>
+              </>
             )}
           </div>
           <div style={{marginTop:14, padding:'10px 12px', background:'var(--accent-soft)', borderRadius:8, fontSize:12, color:'var(--accent-text)'}}>
@@ -519,7 +598,7 @@ function DelayCalc() {
 // 공식: SUM_(회차 i) SUM_(금리 j) [회차금액_i × 일수_ij × 금리_j / 365]
 // ──────────────────────────────────────────────────────────
 function InterimCalc() {
-  // 기본값: 62a 기준 xlsx 그대로
+  // 기본값: 62a 기준
   const [perRound, setPerRound] = React.useState(4314); // 만원 (43,140,000원)
   const [rounds, setRounds] = React.useState(6);
   const [moveDate, setMoveDate] = React.useState('2025-12-31'); // 입주예정일(정산일)
@@ -533,6 +612,10 @@ function InterimCalc() {
     { rate: 5.64, start: '2024-05-25', label: '변동(D)' },
     { rate: 5.47, start: '2024-11-25', label: '변동(E)' },
   ]);
+  // 회차별 상환: 각 회차당 1건의 (날짜, 금액). 빈 값이면 상환 없음.
+  const [repayments, setRepayments] = React.useState(
+    Array(8).fill(null).map(() => ({ date: '', amount: 0 }))
+  );
 
   const updateRoundDate = (i, val) => {
     const next = [...roundDates];
@@ -544,50 +627,100 @@ function InterimCalc() {
     next[i] = { ...next[i], [field]: field === 'rate' ? (+val || 0) : val };
     setRateTiers(next);
   };
+  const updateRepayment = (i, field, val) => {
+    const next = [...repayments];
+    next[i] = { ...next[i], [field]: field === 'amount' ? (+val || 0) : val };
+    setRepayments(next);
+  };
+  const clearRepayment = (i) => {
+    const next = [...repayments];
+    next[i] = { date: '', amount: 0 };
+    setRepayments(next);
+  };
 
   const perRoundWon = perRound * 10000;
-  const usedRounds = rateTiers; // A~E 그대로 사용
 
-  // 회차별·금리구간별 이자 계산
+  // 회차별·금리구간별 이자 계산 (상환 반영)
   const calc = React.useMemo(() => {
     if (!moveDate) return { totalInterest: 0, byRound: [], byTier: [] };
     const moveD = new Date(moveDate);
     const dayMs = 1000 * 60 * 60 * 24;
 
-    // 각 금리 구간의 [시작일, 종료일] 계산
-    // A 금리: 회차 시작 ~ B 시작
-    // B 금리: max(B 시작, 회차 시작) ~ C 시작
-    // ...
-    // E 금리: max(E 시작, 회차 시작) ~ 입주예정일
-    const tierBoundaries = usedRounds.map((t, i) => {
-      const start = t.start ? new Date(t.start) : null; // null = 회차 시작일을 따름
-      const nextStart = i + 1 < usedRounds.length && usedRounds[i+1].start ? new Date(usedRounds[i+1].start) : moveD;
-      return { ...t, startDate: start, endDate: nextStart };
+    // 각 금리 구간의 [시작일, 종료일]
+    const tierWithRange = rateTiers.map((t, i) => {
+      const start = t.start ? new Date(t.start) : null;
+      const next = i + 1 < rateTiers.length && rateTiers[i+1].start ? new Date(rateTiers[i+1].start) : moveD;
+      return { ...t, startDate: start, endDate: next };
     });
+    // 특정 날짜 시점에 적용되는 tier 인덱스
+    const tierIndexAt = (date) => {
+      let best = 0;
+      for (let i = 0; i < tierWithRange.length; i++) {
+        const s = tierWithRange[i].startDate;
+        if (!s || s <= date) best = i;
+      }
+      return best;
+    };
 
     const byRound = [];
     let totalInterest = 0;
-    const byTierSum = usedRounds.map(t => ({ ...t, sum: 0 }));
+    const byTierSum = rateTiers.map(t => ({ ...t, sum: 0 }));
 
     for (let r = 0; r < rounds; r++) {
       const roundStart = new Date(roundDates[r] || roundDates[0]);
-      let roundInterest = 0;
-      const tierDetails = [];
-      tierBoundaries.forEach((tb, i) => {
-        // 적용 시작일 = max(금리 시작일, 회차 시작일)
-        const segStart = tb.startDate ? (tb.startDate > roundStart ? tb.startDate : roundStart) : roundStart;
-        const segEnd = tb.endDate;
-        const days = Math.max(0, Math.floor((segEnd - segStart) / dayMs));
-        const interest = perRoundWon * days * (tb.rate / 100) / 365;
-        roundInterest += interest;
-        byTierSum[i].sum += interest;
-        tierDetails.push({ tier: tb.label, days, rate: tb.rate, interest });
+      let principal = perRoundWon;
+
+      // 이 회차의 상환 (있으면)
+      const rp = repayments[r] || { date: '', amount: 0 };
+      const rpDate = rp.date ? new Date(rp.date) : null;
+      const rpAmountWon = (rp.amount || 0) * 10000;
+      const rpValid = rpDate && rpDate > roundStart && rpDate <= moveD && rpAmountWon > 0;
+
+      // 분기점 수집: 회차시작, 입주예정일, tier 경계, 상환일
+      const breakSet = new Set();
+      breakSet.add(roundStart.getTime());
+      breakSet.add(moveD.getTime());
+      tierWithRange.forEach(tb => {
+        if (tb.startDate && tb.startDate > roundStart && tb.startDate < moveD) {
+          breakSet.add(tb.startDate.getTime());
+        }
       });
-      byRound.push({ round: r + 1, start: roundDates[r], interest: roundInterest, tiers: tierDetails });
+      if (rpValid) breakSet.add(rpDate.getTime());
+
+      const breaks = [...breakSet].sort((a, b) => a - b).map(t => new Date(t));
+      let roundInterest = 0;
+
+      for (let i = 0; i < breaks.length - 1; i++) {
+        const segStart = breaks[i];
+        const segEnd = breaks[i+1];
+        const days = Math.max(0, Math.floor((segEnd - segStart) / dayMs));
+        if (days === 0) continue;
+        const tIdx = tierIndexAt(segStart);
+        const rate = tierWithRange[tIdx].rate;
+        const interest = principal * days * (rate / 100) / 365;
+        roundInterest += interest;
+        byTierSum[tIdx].sum += interest;
+
+        // 구간 끝이 상환일이면 잔액 차감
+        if (rpValid && segEnd.getTime() === rpDate.getTime()) {
+          principal = Math.max(0, principal - rpAmountWon);
+        }
+      }
+
+      byRound.push({
+        round: r + 1,
+        start: roundDates[r],
+        interest: roundInterest,
+        repayment: rpValid ? {
+          date: rp.date,
+          amount: rpAmountWon,
+          finalPrincipal: principal,
+        } : null,
+      });
       totalInterest += roundInterest;
     }
     return { totalInterest, byRound, byTier: byTierSum };
-  }, [perRoundWon, rounds, roundDates, usedRounds, moveDate]);
+  }, [perRoundWon, rounds, roundDates, rateTiers, moveDate, repayments]);
 
   return (
     <div className="card card-lg">
@@ -654,6 +787,43 @@ function InterimCalc() {
               ))}
             </div>
           </div>
+
+          <div className="field">
+            <label>회차별 상환 <span className="dim">(선택사항 · 상환일/상환액)</span></label>
+            <div style={{display:'grid', gridTemplateColumns:'1fr', gap:6}}>
+              {Array.from({length: rounds}, (_, i) => {
+                const rp = repayments[i] || { date: '', amount: 0 };
+                const filled = !!(rp.date && rp.amount);
+                return (
+                  <div key={i} className="row gap-6" style={{
+                    alignItems:'center',
+                    padding:'6px 8px',
+                    background: filled ? 'var(--positive-soft)' : 'var(--surface-2)',
+                    borderRadius:6,
+                    border: filled ? '1px solid var(--positive)' : '1px solid var(--border)',
+                  }}>
+                    <span style={{fontSize:12, color: filled?'var(--positive)':'var(--text-2)', minWidth:42, fontWeight:700}}>{i+1}회차</span>
+                    <input type="date"
+                      value={rp.date || ''}
+                      onChange={e=>updateRepayment(i, 'date', e.target.value)}
+                      style={{flex:1, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}} />
+                    <input type="number"
+                      value={rp.amount || ''}
+                      placeholder="0"
+                      onChange={e=>updateRepayment(i, 'amount', e.target.value)}
+                      style={{width:80, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit', textAlign:'right'}} />
+                    <span style={{fontSize:11.5, color:'var(--text-2)'}}>만원</span>
+                    {filled && (
+                      <button type="button" onClick={()=>clearRepayment(i)}
+                        title="상환 정보 지우기"
+                        style={{padding:'2px 6px', fontSize:10, border:'1px solid var(--border)', background:'var(--surface)', borderRadius:4, cursor:'pointer'}}>×</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="field-hint">상환일과 상환액(만원) 입력 시 그 시점부터 잔액에만 이자가 발생합니다. 회차당 1건. 회차금액({perRound}만원) 이상이면 완납 처리.</div>
+          </div>
         </div>
 
         <div className="calc-result">
@@ -666,8 +836,16 @@ function InterimCalc() {
           <div className="calc-breakdown">
             <div style={{fontSize:11.5, fontWeight:700, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em', marginTop:8, marginBottom:6}}>회차별 이자</div>
             {calc.byRound.map(r => (
-              <div key={r.round} className="breakdown-row">
-                <span className="l">{r.round}회차 ({r.start})</span>
+              <div key={r.round} className="breakdown-row" style={r.repayment ? {alignItems:'flex-start'} : {}}>
+                <span className="l" style={{display:'flex', flexDirection:'column'}}>
+                  <span>{r.round}회차 ({r.start})</span>
+                  {r.repayment && (
+                    <span style={{fontSize:10.5, color: r.repayment.finalPrincipal === 0 ? 'var(--positive)' : 'var(--text-3)', marginTop:2, fontWeight:500}}>
+                      ↳ {r.repayment.date} 상환 {fmt.eok(r.repayment.amount)}원
+                      {r.repayment.finalPrincipal === 0 ? ' (완납)' : ` · 잔액 ${fmt.eok(r.repayment.finalPrincipal)}원`}
+                    </span>
+                  )}
+                </span>
                 <span className="v num">{fmt.eok(r.interest)}원</span>
               </div>
             ))}

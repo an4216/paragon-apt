@@ -17,7 +17,7 @@ function App() {
 
   // Active section observer
   React.useEffect(() => {
-    const ids = ['home', 'complex', 'schedule', 'calc', 'mover', 'downloads'];
+    const ids = ['home', 'complex', 'schedule', 'calc', 'downloads'];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(en => {
@@ -46,9 +46,8 @@ function App() {
       <main>
         <Hero onNav={onNav} ddayDate={effectiveDate} />
         <Complex />
-        <Schedule />
+        <Schedule ddayDate={effectiveDate} />
         <Calculators />
-        <MovingPlanner ddayDate={effectiveDate} />
         <Downloads />
       </main>
       <Footer />

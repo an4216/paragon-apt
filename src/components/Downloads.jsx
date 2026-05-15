@@ -122,9 +122,8 @@ function Footer() {
           <div>
             <h4>바로가기</h4>
             <ul>
-              <li><a href="#schedule">입주 일정</a></li>
+              <li><a href="#schedule">입주·이사 일정</a></li>
               <li><a href="#calc">계산기</a></li>
-              <li><a href="#mover">이사 플래너</a></li>
               <li><a href="#downloads">자료실</a></li>
             </ul>
           </div>
