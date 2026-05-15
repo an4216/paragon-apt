@@ -612,9 +612,9 @@ function InterimCalc() {
     { rate: 5.64, start: '2024-05-25', label: '변동(D)' },
     { rate: 5.47, start: '2024-11-25', label: '변동(E)' },
   ]);
-  // 회차별 상환: 각 회차당 1건의 (날짜, 금액). 빈 값이면 상환 없음.
+  // 회차별 전체상환: 각 회차당 (체크박스 paidOff + 상환일). 체크되면 회차금액 전액 상환.
   const [repayments, setRepayments] = React.useState(
-    Array(8).fill(null).map(() => ({ date: '', amount: 0 }))
+    Array(8).fill(null).map(() => ({ paidOff: false, date: '' }))
   );
 
   const updateRoundDate = (i, val) => {
@@ -629,12 +629,12 @@ function InterimCalc() {
   };
   const updateRepayment = (i, field, val) => {
     const next = [...repayments];
-    next[i] = { ...next[i], [field]: field === 'amount' ? (+val || 0) : val };
+    next[i] = { ...next[i], [field]: val };
     setRepayments(next);
   };
-  const clearRepayment = (i) => {
+  const togglePaidOff = (i) => {
     const next = [...repayments];
-    next[i] = { date: '', amount: 0 };
+    next[i] = { ...next[i], paidOff: !next[i].paidOff };
     setRepayments(next);
   };
 
@@ -670,11 +670,11 @@ function InterimCalc() {
       const roundStart = new Date(roundDates[r] || roundDates[0]);
       let principal = perRoundWon;
 
-      // 이 회차의 상환 (있으면)
-      const rp = repayments[r] || { date: '', amount: 0 };
+      // 이 회차의 전체상환 (체크되고 날짜 있으면)
+      const rp = repayments[r] || { paidOff: false, date: '' };
       const rpDate = rp.date ? new Date(rp.date) : null;
-      const rpAmountWon = (rp.amount || 0) * 10000;
-      const rpValid = rpDate && rpDate > roundStart && rpDate <= moveD && rpAmountWon > 0;
+      const rpAmountWon = rp.paidOff ? perRoundWon : 0;
+      const rpValid = rp.paidOff && rpDate && rpDate > roundStart && rpDate <= moveD;
 
       // 분기점 수집: 회차시작, 입주예정일, tier 경계, 상환일
       const breakSet = new Set();
@@ -789,40 +789,47 @@ function InterimCalc() {
           </div>
 
           <div className="field">
-            <label>회차별 상환 <span className="dim">(선택사항 · 상환일/상환액)</span></label>
+            <label>회차별 전체상환 <span className="dim">(선택사항)</span></label>
             <div style={{display:'grid', gridTemplateColumns:'1fr', gap:6}}>
               {Array.from({length: rounds}, (_, i) => {
-                const rp = repayments[i] || { date: '', amount: 0 };
-                const filled = !!(rp.date && rp.amount);
+                const rp = repayments[i] || { paidOff: false, date: '' };
+                const active = rp.paidOff && !!rp.date;
                 return (
-                  <div key={i} className="row gap-6" style={{
-                    alignItems:'center',
-                    padding:'6px 8px',
-                    background: filled ? 'var(--positive-soft)' : 'var(--surface-2)',
+                  <label key={i} style={{
+                    display:'flex', alignItems:'center', gap:10,
+                    padding:'8px 10px',
+                    background: active ? 'var(--positive-soft)' : 'var(--surface-2)',
                     borderRadius:6,
-                    border: filled ? '1px solid var(--positive)' : '1px solid var(--border)',
+                    border: active ? '1px solid var(--positive)' : '1px solid var(--border)',
+                    cursor:'pointer',
                   }}>
-                    <span style={{fontSize:12, color: filled?'var(--positive)':'var(--text-2)', minWidth:42, fontWeight:700}}>{i+1}회차</span>
-                    <input type="date"
-                      value={rp.date || ''}
-                      onChange={e=>updateRepayment(i, 'date', e.target.value)}
-                      style={{flex:1, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}} />
-                    <input type="number"
-                      value={rp.amount || ''}
-                      placeholder="0"
-                      onChange={e=>updateRepayment(i, 'amount', e.target.value)}
-                      style={{width:80, padding:'5px 6px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit', textAlign:'right'}} />
-                    <span style={{fontSize:11.5, color:'var(--text-2)'}}>만원</span>
-                    {filled && (
-                      <button type="button" onClick={()=>clearRepayment(i)}
-                        title="상환 정보 지우기"
-                        style={{padding:'2px 6px', fontSize:10, border:'1px solid var(--border)', background:'var(--surface)', borderRadius:4, cursor:'pointer'}}>×</button>
+                    <input
+                      type="checkbox"
+                      checked={rp.paidOff}
+                      onChange={()=>togglePaidOff(i)}
+                      style={{width:16, height:16, cursor:'pointer', flexShrink:0}}
+                    />
+                    <span style={{fontSize:13, color: active?'var(--positive)':'var(--text-2)', fontWeight:700, minWidth:60}}>
+                      {i+1}차 전체상환
+                    </span>
+                    <span style={{flex:1}}></span>
+                    {rp.paidOff && (
+                      <>
+                        <span style={{fontSize:11, color:'var(--text-3)'}}>상환일</span>
+                        <input
+                          type="date"
+                          value={rp.date || ''}
+                          onChange={e=>updateRepayment(i, 'date', e.target.value)}
+                          onClick={e=>e.stopPropagation()}
+                          style={{padding:'5px 8px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}}
+                        />
+                      </>
                     )}
-                  </div>
+                  </label>
                 );
               })}
             </div>
-            <div className="field-hint">상환일과 상환액(만원) 입력 시 그 시점부터 잔액에만 이자가 발생합니다. 회차당 1건. 회차금액({perRound}만원) 이상이면 완납 처리.</div>
+            <div className="field-hint">체크하면 해당 회차의 원금 전액({perRound}만원)이 상환일에 차감되어, 그 이후로는 이자가 발생하지 않습니다.</div>
           </div>
         </div>
 
@@ -840,9 +847,8 @@ function InterimCalc() {
                 <span className="l" style={{display:'flex', flexDirection:'column'}}>
                   <span>{r.round}회차 ({r.start})</span>
                   {r.repayment && (
-                    <span style={{fontSize:10.5, color: r.repayment.finalPrincipal === 0 ? 'var(--positive)' : 'var(--text-3)', marginTop:2, fontWeight:500}}>
-                      ↳ {r.repayment.date} 상환 {fmt.eok(r.repayment.amount)}원
-                      {r.repayment.finalPrincipal === 0 ? ' (완납)' : ` · 잔액 ${fmt.eok(r.repayment.finalPrincipal)}원`}
+                    <span style={{fontSize:10.5, color:'var(--positive)', marginTop:2, fontWeight:600}}>
+                      ↳ {r.repayment.date} 전체상환 (완납)
                     </span>
                   )}
                 </span>
