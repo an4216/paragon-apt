@@ -795,13 +795,18 @@ function InterimCalc() {
                 const rp = repayments[i] || { paidOff: false, date: '' };
                 const active = rp.paidOff && !!rp.date;
                 const cbId = `paid-off-${i}`;
+                // 유효성: 상환일은 회차 시작일 다음 ~ 입주예정일 사이여야 함
+                const rs = roundDates[i] || roundDates[0];
+                const minDate = rs;
+                const maxDate = moveDate;
+                const invalid = rp.paidOff && rp.date && (rp.date <= rs || rp.date > moveDate);
                 return (
                   <div key={i} style={{
-                    display:'flex', alignItems:'center', gap:10,
+                    display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
                     padding:'8px 10px',
-                    background: active ? 'var(--positive-soft)' : 'var(--surface-2)',
+                    background: invalid ? 'var(--warning-soft)' : active ? 'var(--positive-soft)' : 'var(--surface-2)',
                     borderRadius:6,
-                    border: active ? '1px solid var(--positive)' : '1px solid var(--border)',
+                    border: invalid ? '1px solid var(--warning)' : active ? '1px solid var(--positive)' : '1px solid var(--border)',
                   }}>
                     <input
                       id={cbId}
@@ -811,22 +816,29 @@ function InterimCalc() {
                       style={{width:16, height:16, cursor:'pointer', flexShrink:0}}
                     />
                     <label htmlFor={cbId} style={{
-                      fontSize:13, color: active?'var(--positive)':'var(--text-2)', fontWeight:700,
+                      fontSize:13, color: invalid?'var(--warning)':active?'var(--positive)':'var(--text-2)', fontWeight:700,
                       minWidth:60, cursor:'pointer', userSelect:'none',
                     }}>
                       {i+1}차 전체상환
                     </label>
-                    <span style={{flex:1}}></span>
+                    <span style={{flex:1, minWidth:0}}></span>
                     {rp.paidOff && (
                       <>
                         <span style={{fontSize:11, color:'var(--text-3)'}}>상환일</span>
                         <input
                           type="date"
                           value={rp.date || ''}
+                          min={minDate}
+                          max={maxDate}
                           onChange={e=>updateRepayment(i, 'date', e.target.value)}
                           style={{padding:'5px 8px', borderRadius:5, border:'1px solid var(--border)', background:'var(--surface)', fontSize:12, fontFamily:'inherit'}}
                         />
                       </>
+                    )}
+                    {invalid && (
+                      <div style={{width:'100%', fontSize:11, color:'var(--warning)', marginTop:2}}>
+                        ⚠ 상환일이 {i+1}차 시작일({rs}) 이후 ~ 입주예정일({moveDate}) 사이여야 합니다.
+                      </div>
                     )}
                   </div>
                 );
