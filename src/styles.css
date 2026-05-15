@@ -339,6 +339,25 @@ input, button, textarea, select { font: inherit; color: inherit; }
 .plan-body .specs { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .plan-type-chip { position: absolute; top: 12px; right: 12px; }
 
+/* === Schedule Task Control Bar === */
+.task-control { margin-bottom: 24px; }
+.task-form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
+.task-form-title { display: flex; flex-direction: column; gap: 6px; grid-column: 1 / 2; }
+.task-form-title label,
+.task-form-meta .field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.task-form-title input { width: 100%; }
+.task-form-meta { display: contents; }
+.task-form-meta .field { display: flex; flex-direction: column; gap: 6px; }
+.task-form-meta .field select { width: 100%; }
+.task-form-add { white-space: nowrap; }
+.task-actions {
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.task-actions-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.task-actions-buttons { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.task-reset { color: #dc2626; margin-left: auto; }
+
 /* === Schedule / Checklist === */
 .timeline { position: relative; padding-left: 28px; }
 .timeline::before {
@@ -596,4 +615,41 @@ input, button, textarea, select { font: inherit; color: inherit; }
   .plan-type-chip { top: 5px; right: 5px; font-size: 10px; padding: 2px 7px; }
 
   .mover-task { padding: 12px; }
+
+  /* Schedule 폼 — 모바일에서 깔끔한 스택 레이아웃 */
+  .task-control { padding: 16px; }
+  .task-form { display: flex; flex-direction: column; gap: 10px; }
+  .task-form-title { gap: 4px; }
+  .task-form-title label,
+  .task-form-meta .field label { font-size: 11px; }
+  .task-form-meta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .task-form-meta .field { gap: 4px; }
+  .task-form-add {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+    margin-top: 2px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .task-actions { gap: 8px; padding-top: 12px; margin-top: 12px; }
+  .task-actions-label { width: 100%; margin-bottom: 2px; }
+  .task-actions-buttons { width: 100%; }
+  .task-actions-buttons .btn-sm { flex: 1 1 auto; justify-content: center; min-width: 0; padding: 7px 10px; }
+  .task-reset { margin-left: 0; flex: 0 1 auto !important; }
+
+  /* Section header sub text 줄바꿈 정리 */
+  .section-sub { font-size: 13px; line-height: 1.5; }
+  .section-eyebrow { font-size: 11px; }
+
+  /* Footer 모바일 정리 */
+  .footer { padding: 32px 0 20px !important; }
+  .footer-inner { gap: 24px !important; }
+  .footer h4 { margin-bottom: 8px !important; font-size: 12px; }
+  .footer ul li { padding: 2px 0 !important; font-size: 13px; }
+  .footer .copy { flex-direction: column; gap: 4px; font-size: 11px; }
 }

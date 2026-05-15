@@ -149,8 +149,12 @@ function Schedule({ ddayDate }) {
             <h2 className="section-title">내 일정에 맞춘 입주·이사 계획</h2>
             <p className="section-sub">
               입주일 기준 D-Day로 자동 정렬. 인테리어·시공·이사·행정까지 한 곳에서.
-              {ddayDate && <> · 입주 예정일: <strong>{ddayDate}</strong></>}
             </p>
+            {ddayDate && (
+              <div style={{marginTop:8, display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px', background:'var(--accent-soft)', color:'var(--accent-text)', borderRadius:'var(--r-full)', fontSize:12, fontWeight:600}}>
+                입주 예정일 · <span className="num">{ddayDate}</span>
+              </div>
+            )}
           </div>
           <div style={{minWidth:200}}>
             <div className="row-between" style={{marginBottom:6}}>
@@ -162,61 +166,66 @@ function Schedule({ ddayDate }) {
         </div>
 
         {/* 컨트롤 바: 항목 추가 + 다운로드 */}
-        <div className="card card-lg" style={{marginBottom:24}}>
-          <div className="row gap-10" style={{flexWrap:'wrap', alignItems:'flex-end'}}>
-            <div className="field" style={{flex:'2 1 240px'}}>
-              <label style={{fontSize:12, fontWeight:600, color:'var(--text-2)', display:'block', marginBottom:6}}>할 일 추가</label>
+        <div className="card card-lg task-control">
+          <div className="task-form">
+            <div className="task-form-title">
+              <label>할 일 추가</label>
               <input
                 type="text"
-                placeholder="예: 우편물 이전 신청 / 사전점검 방문"
+                placeholder="예: 우편물 이전 / 사전점검 방문"
                 value={newTitle}
                 onChange={e=>setNewTitle(e.target.value)}
                 onKeyDown={e=>{if(e.key==='Enter') addTask();}}
               />
             </div>
-            <div className="field" style={{width:130}}>
-              <label style={{fontSize:12, fontWeight:600, color:'var(--text-2)', display:'block', marginBottom:6}}>시점</label>
-              <select value={newWhen} onChange={e=>setNewWhen(+e.target.value)}>
-                <option value={-60}>D-60 (2달 전)</option>
-                <option value={-45}>D-45</option>
-                <option value={-30}>D-30 (1달 전)</option>
-                <option value={-14}>D-14 (2주 전)</option>
-                <option value={-7}>D-7 (1주 전)</option>
-                <option value={-3}>D-3 (3일 전)</option>
-                <option value={0}>D-Day (입주일)</option>
-                <option value={3}>D+3</option>
-                <option value={7}>D+7</option>
-                <option value={14}>D+14</option>
-                <option value={30}>D+30</option>
-              </select>
+            <div className="task-form-meta">
+              <div className="field">
+                <label>시점</label>
+                <select value={newWhen} onChange={e=>setNewWhen(+e.target.value)}>
+                  <option value={-60}>D-60 (2달 전)</option>
+                  <option value={-45}>D-45</option>
+                  <option value={-30}>D-30 (1달 전)</option>
+                  <option value={-14}>D-14 (2주 전)</option>
+                  <option value={-7}>D-7 (1주 전)</option>
+                  <option value={-3}>D-3 (3일 전)</option>
+                  <option value={0}>D-Day (입주일)</option>
+                  <option value={3}>D+3</option>
+                  <option value={7}>D+7</option>
+                  <option value={14}>D+14</option>
+                  <option value={30}>D+30</option>
+                </select>
+              </div>
+              <div className="field">
+                <label>카테고리</label>
+                <select value={newCat} onChange={e=>setNewCat(e.target.value)}>
+                  <option>점검</option><option>인테리어</option><option>시공</option>
+                  <option>청소</option><option>예약</option><option>통신</option>
+                  <option>공과금</option><option>가전</option><option>관리</option>
+                  <option>잔금</option><option>이사</option><option>행정</option><option>세금</option>
+                </select>
+              </div>
+              <button className="btn btn-primary task-form-add" onClick={addTask}>
+                <Icon.Plus /> 추가
+              </button>
             </div>
-            <div className="field" style={{width:120}}>
-              <label style={{fontSize:12, fontWeight:600, color:'var(--text-2)', display:'block', marginBottom:6}}>카테고리</label>
-              <select value={newCat} onChange={e=>setNewCat(e.target.value)}>
-                <option>점검</option><option>인테리어</option><option>시공</option>
-                <option>청소</option><option>예약</option><option>통신</option>
-                <option>공과금</option><option>가전</option><option>관리</option>
-                <option>잔금</option><option>이사</option><option>행정</option><option>세금</option>
-              </select>
-            </div>
-            <button className="btn btn-primary" onClick={addTask}><Icon.Plus /> 추가</button>
           </div>
 
-          <div className="row gap-6" style={{flexWrap:'wrap', marginTop:14, paddingTop:14, borderTop:'1px solid var(--border)'}}>
-            <span style={{fontSize:12, fontWeight:600, color:'var(--text-2)', alignSelf:'center', marginRight:4}}>📥 다운로드:</span>
-            <button className="btn btn-primary btn-sm" onClick={exportCSV} title="엑셀에서 열기">
-              <Icon.Download size={12} /> CSV
-            </button>
-            <button className="btn btn-sm" onClick={exportICS} title="구글캘린더·아이폰에 등록">
-              <Icon.Calendar size={12} /> 캘린더(ICS)
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={exportTXT} title="텍스트로 받기">
-              <Icon.Doc size={12} /> TXT
-            </button>
-            <span style={{flex:1}}></span>
-            <button className="btn btn-ghost btn-sm" onClick={resetAll} title="기본 추천으로 초기화" style={{color:'#dc2626'}}>
-              <Icon.Close size={12} /> 기본값으로 초기화
-            </button>
+          <div className="task-actions">
+            <span className="task-actions-label">📥 다운로드</span>
+            <div className="task-actions-buttons">
+              <button className="btn btn-primary btn-sm" onClick={exportCSV} title="엑셀에서 열기">
+                <Icon.Download size={12} /> CSV
+              </button>
+              <button className="btn btn-sm" onClick={exportICS} title="구글캘린더·아이폰에 등록">
+                <Icon.Calendar size={12} /> ICS
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={exportTXT} title="텍스트로 받기">
+                <Icon.Doc size={12} /> TXT
+              </button>
+              <button className="btn btn-ghost btn-sm task-reset" onClick={resetAll} title="기본 추천으로 초기화">
+                <Icon.Close size={12} /> 초기화
+              </button>
+            </div>
           </div>
         </div>
 
