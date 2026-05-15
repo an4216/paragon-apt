@@ -13,34 +13,36 @@
 ## 로컬 실행
 
 ```bash
-cd paragonPJ
 ./start.sh        # macOS/Linux
 start.bat         # Windows
 ```
 
-브라우저에서 http://localhost:8000/주안센트럴파라곤.html 접속.
+브라우저에서 http://localhost:8000/ 접속.
+
+## 배포 (Vercel)
+
+루트에 `index.html`이 있어서 별도 설정 없이 자동 배포됩니다.
 
 ## 프로젝트 구조
 
 ```
-paragonPJ/
-├── 주안센트럴파라곤.html       # 진입점
+/
+├── index.html                  # 진입점
 ├── src/
-│   ├── app.jsx                # 메인 앱
-│   ├── lib.jsx                # 공용 아이콘/유틸
+│   ├── app.jsx                 # 메인 앱
+│   ├── lib.jsx                 # 공용 아이콘/유틸
 │   ├── styles.css
 │   ├── tweaks-panel.jsx
 │   └── components/
-│       ├── Hero.jsx           # 히어로 / D-day
+│       ├── Hero.jsx            # 히어로 / D-day
 │       ├── Nav.jsx
-│       ├── Complex.jsx        # 단지 정보 (평면도 7종)
-│       ├── Schedule.jsx       # 입주 타임라인 빌더
-│       ├── Calculators.jsx    # 대출/지연금/중도금이자 계산기
+│       ├── Complex.jsx         # 단지 정보 (평면도 7종)
+│       ├── Schedule.jsx        # 입주 타임라인 빌더
+│       ├── Calculators.jsx     # 대출/지연금/중도금이자 계산기
 │       ├── MovingPlanner.jsx
-│       └── Downloads.jsx      # 자료실 + FAQ + Footer
-└── assets/plans/              # 평면도 PNG (웹 서빙용, 7종)
-
-floor-plans/                   # 평면도 PNG 원본 (7종, 51A/51B/59/62A/62B/76/84)
+│       └── Downloads.jsx       # 자료실 + FAQ + Footer
+├── assets/plans/               # 평면도 PNG (웹 서빙용, 7종)
+└── floor-plans/                # 평면도 PNG 원본 (7종, 51A/51B/59/62A/62B/76/84)
 ```
 
 ## 계산기 데이터 기준

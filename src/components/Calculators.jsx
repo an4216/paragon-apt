@@ -280,11 +280,33 @@ function LoanCalc() {
 }
 
 // ──────────────────────────────────────────────────────────
-// 입주 지연금 계산기 — 입주지연보상금계산.xlsx 기반
-// 단계별 연이율 (사용자 확인: 12.05%가 max)
-// 1~30일: 9.05% / 31~60일: 10.05% / 61~90일: 11.05% / 91일 이상: 12.05%
+// 입주 지연금 계산기 — 분양계약서 지체상금 조항 기준
+// 단계별 연이율: 1~30일 9.05% / 31~60일 10.05% / 61~90일 11.05% / 91일~ 12.05% (max)
 // 공식: ROUNDUP(원금 × 이율 / 365 × 일수, 0)
+// 입주 최초예정일: 2025-12-31 → 오늘까지 자동 계산
 // ──────────────────────────────────────────────────────────
+
+// 7개 평형 타입 (모집공고 2022000222 기준, 분양가 단위: 만원)
+const PLAN_TYPES = [
+  { id: '51A', label: '51A', area: '51.98㎡', priceK: 32930 },
+  { id: '51B', label: '51B', area: '51.60㎡', priceK: 32780 },
+  { id: '59',  label: '59',  area: '59.96㎡', priceK: 41530 },
+  { id: '62A', label: '62A', area: '62.90㎡', priceK: 43140 },
+  { id: '62B', label: '62B', area: '63.00㎡', priceK: 42800 },
+  { id: '76',  label: '76',  area: '76.69㎡', priceK: 50570 },
+  { id: '84',  label: '84',  area: '84.68㎡', priceK: 57940 },
+];
+
+// 입주 최초예정일
+const DELAY_REFERENCE_DATE = '2025-12-31';
+
+// 두 날짜 사이의 일수 (오늘 - 기준일)
+function diffDays(fromIso) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const from = new Date(fromIso); from.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.floor((today - from) / 86400000));
+}
+
 function DelayCalc() {
   const RATE_TIERS = [
     { maxDays: 30,  rate: 9.05,  label: '1개월 이내 (1~30일)' },
@@ -293,53 +315,139 @@ function DelayCalc() {
     { maxDays: Infinity, rate: 12.05, label: '3개월 초과 (91일~)' },
   ];
   const MAX_RATE = 12.05;
-
   const tierFor = (days) => RATE_TIERS.find(t => days <= t.maxDays) || RATE_TIERS[RATE_TIERS.length-1];
 
-  const [base, setBase] = React.useState(29960); // 만원 (xlsx 기본값 2.996억)
-  const [days, setDays] = React.useState(60);
+  // 자동 지연일수
+  const autoDelayDays = diffDays(DELAY_REFERENCE_DATE);
+
+  // 상태
+  const [selectedType, setSelectedType] = React.useState('62A');
+  const currentPlan = PLAN_TYPES.find(p => p.id === selectedType);
+  // 기납부 비율 (계약금 10% + 중도금 6회 × 10% = 70%) — 사용자 조정 가능
+  const [paidRatio, setPaidRatio] = React.useState(70);
+  // 기납부액(만원) — 타입 변경 시 자동 갱신, 사용자 직접 입력도 가능
+  const [base, setBase] = React.useState(() => Math.round(PLAN_TYPES.find(p=>p.id==='62A').priceK * 0.7));
+  const [baseOverride, setBaseOverride] = React.useState(false);
+
+  // 일수: 자동/수동 토글
+  const [autoDays, setAutoDays] = React.useState(true);
+  const [manualDays, setManualDays] = React.useState(autoDelayDays);
+  const days = autoDays ? autoDelayDays : manualDays;
+
+  // 타입/비율 변경 시 base 갱신 (override 안 됐을 때만)
+  React.useEffect(() => {
+    if (!baseOverride) {
+      setBase(Math.round(currentPlan.priceK * (paidRatio / 100)));
+    }
+  }, [selectedType, paidRatio, baseOverride, currentPlan.priceK]);
+
+  const handleBaseChange = (v) => { setBase(v); setBaseOverride(true); };
+  const resetBase = () => { setBaseOverride(false); setBase(Math.round(currentPlan.priceK * (paidRatio / 100))); };
 
   const baseWon = base * 10000;
   const tier = tierFor(days);
-  // xlsx 공식: ROUNDUP(원금 × rate/100 / 365 × days, 0)
   const penalty = Math.ceil(baseWon * (tier.rate / 100) / 365 * days);
   const dailyPenalty = Math.ceil(baseWon * (tier.rate / 100) / 365);
-
-  // 단계별 금액 (참고용 표)
-  const tierPenalties = RATE_TIERS.map(t => {
-    const checkDays = t.maxDays === Infinity ? days : t.maxDays;
-    return { ...t, days: checkDays, penalty: Math.ceil(baseWon * (t.rate / 100) / 365 * checkDays) };
-  });
 
   return (
     <div className="card card-lg">
       <div className="calc-grid">
         <div className="col gap-16">
+          {/* 타입 선택 라디오 */}
           <div className="field">
-            <label>지연금 산정 원금 <span className="dim">(기납부액 또는 잔금대출액, 만원)</span></label>
-            <div className="input-suffix">
-              <input type="number" value={base} onChange={e=>setBase(+e.target.value || 0)} />
-              <span>만원</span>
+            <label>평형 타입 선택</label>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(90px, 1fr))', gap:6}}>
+              {PLAN_TYPES.map(p => (
+                <label
+                  key={p.id}
+                  style={{
+                    display:'flex', flexDirection:'column', alignItems:'flex-start',
+                    padding:'8px 10px', cursor:'pointer',
+                    background: selectedType===p.id ? 'var(--accent-soft)' : 'var(--surface)',
+                    border: selectedType===p.id ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius:6,
+                  }}>
+                  <div className="row gap-6" style={{alignItems:'center'}}>
+                    <input
+                      type="radio"
+                      name="delay-plan-type"
+                      checked={selectedType===p.id}
+                      onChange={()=>setSelectedType(p.id)}
+                      style={{margin:0}}
+                    />
+                    <span style={{fontWeight:700, fontSize:13, color: selectedType===p.id ? 'var(--accent-text)' : 'var(--text-1)'}}>{p.label}</span>
+                  </div>
+                  <span style={{fontSize:11, color:'var(--text-3)', marginTop:4}}>{p.area}</span>
+                  <span className="num" style={{fontSize:11.5, color:'var(--text-2)', marginTop:2}}>{fmt.eok(p.priceK * 10000)}원</span>
+                </label>
+              ))}
             </div>
-            <div className="slider-row">
-              <input type="range" min="10000" max="80000" step="500" value={base} onChange={e=>setBase(+e.target.value)} />
-              <div className="val">{fmt.eok(base*10000)}</div>
-            </div>
-            <div className="field-hint">분양계약서상 지체상금 산정 기준액 (기납부 분양대금)</div>
+            <div className="field-hint">선택 타입: <strong>{currentPlan.label}</strong> · 분양가 {fmt.eok(currentPlan.priceK * 10000)}원</div>
           </div>
 
+          {/* 기납부 비율 */}
           <div className="field">
-            <label>지연 일수</label>
-            <div className="input-suffix">
-              <input type="number" value={days} onChange={e=>setDays(+e.target.value || 0)} />
-              <span>일</span>
-            </div>
+            <label>기납부 비율 <span className="dim">(계약금 10% + 중도금 회차)</span></label>
             <div className="slider-row">
-              <input type="range" min="0" max="365" step="1" value={days} onChange={e=>setDays(+e.target.value)} />
-              <div className="val">{days}일 ({(days/30).toFixed(1)}개월)</div>
+              <input type="range" min="10" max="100" step="10" value={paidRatio} onChange={e=>{ setPaidRatio(+e.target.value); setBaseOverride(false); }} />
+              <div className="val">{paidRatio}%</div>
+            </div>
+            <div className="field-hint">계약금만(10%) / 중도금 3회(40%) / 6회(70%) / 잔금 전(100%)</div>
+          </div>
+
+          {/* 기납부 원금 (override 가능) */}
+          <div className="field">
+            <label>지연금 산정 원금 <span className="dim">(기납부 분양대금, 만원)</span></label>
+            <div className="input-suffix">
+              <input type="number" value={base} onChange={e=>handleBaseChange(+e.target.value || 0)} />
+              <span>만원</span>
+            </div>
+            <div className="row gap-6" style={{marginTop:6}}>
+              <span className="num" style={{fontSize:13, color:'var(--text-2)'}}>{fmt.eok(base * 10000)}원</span>
+              {baseOverride && (
+                <button type="button" onClick={resetBase} className="btn btn-ghost btn-sm" style={{fontSize:11, padding:'4px 8px'}}>
+                  자동값으로 복원
+                </button>
+              )}
             </div>
             <div className="field-hint">
-              현재 적용 이율: <strong style={{color:'var(--accent-text)'}}>{tier.rate.toFixed(2)}%</strong> ({tier.label}) · MAX {MAX_RATE}%
+              자동값: <strong>{currentPlan.label}</strong> 분양가 {fmt.eok(currentPlan.priceK*10000)}원 × {paidRatio}% = {fmt.eok(Math.round(currentPlan.priceK * (paidRatio/100)) * 10000)}원
+              {baseOverride && <span style={{color:'var(--warning)', marginLeft:6}}>· 수동 입력 중</span>}
+            </div>
+          </div>
+
+          {/* 지연 일수 (자동/수동) */}
+          <div className="field">
+            <label className="row gap-6" style={{alignItems:'center'}}>
+              <span>지연 일수</span>
+              <span style={{flex:1}}></span>
+              <label style={{display:'inline-flex', alignItems:'center', gap:4, fontSize:11.5, fontWeight:500, cursor:'pointer'}}>
+                <input type="checkbox" checked={autoDays} onChange={e=>setAutoDays(e.target.checked)} />
+                <span>자동 계산 (2025.12.31 ~ 오늘)</span>
+              </label>
+            </label>
+            <div className="input-suffix">
+              <input
+                type="number"
+                value={days}
+                onChange={e=>{ setAutoDays(false); setManualDays(+e.target.value || 0); }}
+                disabled={autoDays}
+                style={autoDays ? {background:'var(--surface-2)', color:'var(--text-2)'} : {}}
+              />
+              <span>일</span>
+            </div>
+            {!autoDays && (
+              <div className="slider-row">
+                <input type="range" min="0" max="365" step="1" value={manualDays} onChange={e=>setManualDays(+e.target.value)} />
+                <div className="val">{manualDays}일 ({(manualDays/30).toFixed(1)}개월)</div>
+              </div>
+            )}
+            <div className="field-hint">
+              {autoDays
+                ? <>기준일 <strong>2025.12.31</strong>부터 오늘({new Date().toISOString().slice(0,10)})까지 <strong style={{color:'var(--accent-text)'}}>{autoDelayDays}일</strong> 경과 · 약 {(autoDelayDays/30).toFixed(1)}개월</>
+                : <>수동 입력: {days}일</>
+              }
+              {' · '}현재 적용 이율 <strong style={{color:'var(--accent-text)'}}>{tier.rate.toFixed(2)}%</strong> ({tier.label}) · MAX {MAX_RATE}%
             </div>
           </div>
 
