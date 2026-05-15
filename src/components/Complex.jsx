@@ -1,11 +1,7 @@
-// 단지 정보 / 평면도 / 동호수 — PNG 평면도(7타입) 매칭
+// 단지 정보 / 평면도 / 단지 스펙 — PNG 평면도(7타입) 매칭
 function Complex() {
   const [tab, setTab] = React.useState('plan');
-  const [selectedBldg, setSelectedBldg] = React.useState(105);
   const [planModal, setPlanModal] = React.useState(null);
-
-  // 101동 ~ 112동 (총 12개동)
-  const buildings = Array.from({ length: 12 }, (_, i) => 101 + i);
 
   // PNG 파일과 1:1 매칭되는 7개 타입
   // 이미지: /assets/plans/{file}
@@ -66,7 +62,6 @@ function Complex() {
           </div>
           <div className="tabs hide-mobile">
             <button className={tab==='plan'?'active':''} onClick={()=>setTab('plan')}>평면도</button>
-            <button className={tab==='bldg'?'active':''} onClick={()=>setTab('bldg')}>동호수</button>
             <button className={tab==='spec'?'active':''} onClick={()=>setTab('spec')}>단지 스펙</button>
           </div>
         </div>
@@ -91,31 +86,6 @@ function Complex() {
           </div>
         )}
 
-        {tab === 'bldg' && (
-          <div className="card card-lg">
-            <div className="bldg-toolbar">
-              <div className="muted" style={{fontSize:13}}>
-                동을 선택하세요 · 선택: <strong>{selectedBldg}동</strong>
-              </div>
-              <div style={{flex:1}}></div>
-              <span className="chip">총 12개동 (101~112동)</span>
-              <span className="chip chip-accent">내 동</span>
-            </div>
-            <div className="bldg-grid">
-              {buildings.map(n => (
-                <button
-                  key={n}
-                  className={`bldg-cell ${selectedBldg===n?'active':''} ${n===105?'unit-105':''}`}
-                  onClick={()=>setSelectedBldg(n)}>
-                  {n}
-                </button>
-              ))}
-            </div>
-            <div className="divider"></div>
-            <BldgDetail bldg={selectedBldg} plans={plans} />
-          </div>
-        )}
-
         {tab === 'spec' && (
           <div className="plan-grid">
             <SpecCard k="총 동수" v="12개동" sub="지하 2층 ~ 지상 최고 40층" />
@@ -131,7 +101,6 @@ function Complex() {
         <div className="show-mobile" style={{marginTop:24}}>
           <div className="tabs" style={{display:'flex', width:'100%'}}>
             <button style={{flex:1}} className={tab==='plan'?'active':''} onClick={()=>setTab('plan')}>평면도</button>
-            <button style={{flex:1}} className={tab==='bldg'?'active':''} onClick={()=>setTab('bldg')}>동호수</button>
             <button style={{flex:1}} className={tab==='spec'?'active':''} onClick={()=>setTab('spec')}>스펙</button>
           </div>
         </div>
@@ -148,39 +117,6 @@ function SpecCard({ k, v, sub }) {
       <div style={{fontSize:12, color:'var(--text-3)', fontWeight:600, letterSpacing:'.04em', textTransform:'uppercase'}}>{k}</div>
       <div style={{fontSize:22, fontWeight:700, letterSpacing:'-.02em', margin:'6px 0 4px'}}>{v}</div>
       <div style={{fontSize:13, color:'var(--text-2)'}}>{sub}</div>
-    </div>
-  );
-}
-
-function BldgDetail({ bldg, plans }) {
-  // 동 번호(101~112)를 7개 타입에 결정론적 배정
-  const typeIds = plans.map(p => p.id);
-  const typeAssign = typeIds[(bldg - 101) % typeIds.length];
-  const assignedPlan = plans.find(p => p.id === typeAssign);
-  // 101~112동 층수: 기본 32층, 양 끝(101·112)은 29층, 가운데(105~108)는 35층
-  const floors = (bldg >= 105 && bldg <= 108) ? 35 : (bldg === 101 || bldg === 112) ? 29 : 32;
-  return (
-    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:16}}>
-      <div>
-        <div className="dim" style={{fontSize:11.5, fontWeight:600, letterSpacing:'.04em', textTransform:'uppercase'}}>동 정보</div>
-        <div style={{fontSize:20, fontWeight:700, marginTop:4}}>{bldg}동</div>
-        <div className="muted" style={{fontSize:13}}>지상 {floors}층 · {typeAssign} 타입 위주</div>
-      </div>
-      <div>
-        <div className="dim" style={{fontSize:11.5, fontWeight:600, letterSpacing:'.04em', textTransform:'uppercase'}}>평형</div>
-        <div style={{fontSize:20, fontWeight:700, marginTop:4}}>{assignedPlan?.area.replace('전용 ','')}</div>
-        <div className="muted" style={{fontSize:13}}>{assignedPlan?.rooms}</div>
-      </div>
-      <div>
-        <div className="dim" style={{fontSize:11.5, fontWeight:600, letterSpacing:'.04em', textTransform:'uppercase'}}>호수 구성</div>
-        <div style={{fontSize:20, fontWeight:700, marginTop:4}}>1·2·3호 라인</div>
-        <div className="muted" style={{fontSize:13}}>3호 라인 / 지상 {floors}층</div>
-      </div>
-      <div>
-        <div className="dim" style={{fontSize:11.5, fontWeight:600, letterSpacing:'.04em', textTransform:'uppercase'}}>커뮤니티 거리</div>
-        <div style={{fontSize:20, fontWeight:700, marginTop:4}}>약 {Math.abs(106 - bldg) * 25 + 40}m</div>
-        <div className="muted" style={{fontSize:13}}>도보 1~3분</div>
-      </div>
     </div>
   );
 }
