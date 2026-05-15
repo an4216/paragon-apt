@@ -1,0 +1,19 @@
+# Archive / large binaries
+*.zip
+
+# bkit plugin metadata (local-only)
+.bkit/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs
+*.log
