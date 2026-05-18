@@ -8,34 +8,38 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-  const [active, setActive] = React.useState('home');
+  const [active, setActive] = React.useState(() => {
+    const hash = (window.location.hash || '').replace('#', '');
+    const valid = ['home', 'complex', 'schedule', 'calc', 'downloads'];
+    return valid.includes(hash) ? hash : 'home';
+  });
 
   // Apply theme to root
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', t.dark ? 'dark' : 'light');
   }, [t.dark]);
 
-  // Active section observer
+  // Sync with browser back/forward
   React.useEffect(() => {
-    const ids = ['home', 'complex', 'schedule', 'calc', 'downloads'];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(en => {
-          if (en.isIntersecting) setActive(en.target.id);
-        });
-      },
-      { rootMargin: '-30% 0px -60% 0px' }
-    );
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    const onHash = () => {
+      const hash = (window.location.hash || '').replace('#', '');
+      const valid = ['home', 'complex', 'schedule', 'calc', 'downloads'];
+      if (valid.includes(hash)) setActive(hash);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // Scroll to top on page change
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    if (window.location.hash !== `#${active}`) {
+      history.replaceState(null, '', `#${active}`);
+    }
+  }, [active]);
 
   const onNav = (id) => {
     setActive(id);
-    scrollToSection(id);
   };
 
   const effectiveDate = t.ddayMode === 'set' && t.ddayDate ? t.ddayDate : null;
@@ -44,11 +48,11 @@ function App() {
     <>
       <Nav active={active} onNav={onNav} dark={t.dark} onToggleDark={()=>setTweak('dark', !t.dark)} />
       <main>
-        <Hero onNav={onNav} ddayDate={effectiveDate} />
-        <Complex />
-        <Schedule ddayDate={effectiveDate} />
-        <Calculators />
-        <Downloads />
+        {active === 'home' && <Hero onNav={onNav} ddayDate={effectiveDate} />}
+        {active === 'complex' && <Complex />}
+        {active === 'schedule' && <Schedule ddayDate={effectiveDate} />}
+        {active === 'calc' && <Calculators />}
+        {active === 'downloads' && <Downloads />}
       </main>
       <Footer />
 
